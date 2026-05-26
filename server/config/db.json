@@ -1,0 +1,917 @@
+{
+  "users": [
+    {
+      "user_id": "p-uuid-1",
+      "name": "Emily Davis",
+      "email": "patient@glucolyse.com",
+      "password_hash": "$2b$10$xNFjbcWVHMPKEoC/KlYyJezIFiuOZgO5x/AhU3ltYs8LXhtiyRLm.",
+      "role": "Patient",
+      "created_at": "2026-05-26T05:24:14.837Z"
+    },
+    {
+      "user_id": "d-uuid-1",
+      "name": "Dr. Sarah Jenkins",
+      "email": "doctor@glucolyse.com",
+      "password_hash": "$2b$10$XGLJd7XBVvf784yHImK1eO.SpytHPvNrPPX6PJ.yMowVQTC6.dbwO",
+      "role": "Doctor",
+      "created_at": "2026-05-26T05:24:14.837Z"
+    },
+    {
+      "user_id": "c-uuid-1",
+      "name": "John Miller",
+      "email": "caretaker@glucolyse.com",
+      "password_hash": "$2b$10$w9j1hdZiJ54bSKrKUjrp0uu5F8DJ2KB6BGFt509pM2sENbd9hP28.",
+      "role": "Caretaker",
+      "created_at": "2026-05-26T05:24:14.837Z"
+    },
+    {
+      "user_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "name": "tanu",
+      "email": "tanu@gmail.com",
+      "password_hash": "$2b$10$BwT18ylqpZLWuYq..7u3Lu/iOZ/WlX8mFdRCg5dfymBly7gas.MIu",
+      "role": "Patient",
+      "created_at": "2026-05-26T06:09:55.983Z"
+    },
+    {
+      "user_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "name": "tanu",
+      "email": "tanu@gamil.com",
+      "password_hash": "$2b$10$.3qPEjTWdm19EjVepPKUEuw9xCJaPK3KnKL5PFXLb6jMK69efyS0K",
+      "role": "Patient",
+      "phone": null,
+      "date_of_birth": null,
+      "specialty": null,
+      "blood_type": null,
+      "emergency_contact": null,
+      "photo_url": null,
+      "created_at": "2026-05-26T09:00:46.826Z"
+    },
+    {
+      "user_id": "4e922c85-0f66-412a-ad8c-b6cdc3cde02b",
+      "name": "tanuj",
+      "email": "tan@gmail.com",
+      "password_hash": "$2b$10$CAdCmjTPZc17E/XnW/hpzO/6hG5QU4q4JjpQQJpa50wMMU9zSVn0q",
+      "role": "Doctor",
+      "phone": null,
+      "date_of_birth": null,
+      "specialty": null,
+      "blood_type": null,
+      "emergency_contact": null,
+      "photo_url": null,
+      "created_at": "2026-05-26T09:02:15.978Z"
+    }
+  ],
+  "patients": [
+    {
+      "patient_id": "p-uuid-1",
+      "doctor_id": "d-uuid-1",
+      "caretaker_id": "c-uuid-1"
+    },
+    {
+      "patient_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "doctor_id": "d-uuid-1",
+      "caretaker_id": "c-uuid-1"
+    },
+    {
+      "patient_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "doctor_id": "d-uuid-1",
+      "caretaker_id": "c-uuid-1"
+    }
+  ],
+  "sugar_readings": [
+    {
+      "reading_id": "c0305d5e-2e7b-4da5-8af2-34fd6fe943fa",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 158,
+      "status": "High",
+      "recorded_at": "2026-04-29T12:10:00.000Z"
+    },
+    {
+      "reading_id": "b5100aef-ebc0-4530-8391-ba370405ac5f",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 167,
+      "status": "High",
+      "recorded_at": "2026-04-29T19:02:00.000Z"
+    },
+    {
+      "reading_id": "e07f5167-fac5-413b-8224-6bb56de9d638",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 126,
+      "status": "High",
+      "recorded_at": "2026-04-30T07:15:00.000Z"
+    },
+    {
+      "reading_id": "d314371a-fdf0-4285-a36a-d5115a85a35e",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 165,
+      "status": "High",
+      "recorded_at": "2026-04-30T12:10:00.000Z"
+    },
+    {
+      "reading_id": "31d0aeaf-f936-47c1-804c-ebe9f3a3a005",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 147,
+      "status": "High",
+      "recorded_at": "2026-04-30T19:02:00.000Z"
+    },
+    {
+      "reading_id": "8fe98917-5fc4-49db-98ed-80ec2fbc014a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 121,
+      "status": "High",
+      "recorded_at": "2026-05-01T07:22:00.000Z"
+    },
+    {
+      "reading_id": "f7efec3c-1426-49cf-9db8-2280814fd92e",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 162,
+      "status": "High",
+      "recorded_at": "2026-05-01T12:27:00.000Z"
+    },
+    {
+      "reading_id": "a8525cd7-4fc5-4f40-b608-7c055dc471ff",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 175,
+      "status": "High",
+      "recorded_at": "2026-05-01T19:12:00.000Z"
+    },
+    {
+      "reading_id": "0bf35118-f085-4604-82fa-4082781c7140",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 117,
+      "status": "High",
+      "recorded_at": "2026-05-02T07:25:00.000Z"
+    },
+    {
+      "reading_id": "39bb466a-3cf2-4350-ba0e-015be4c79ec8",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 141,
+      "status": "High",
+      "recorded_at": "2026-05-02T12:08:00.000Z"
+    },
+    {
+      "reading_id": "a15d4b0a-589e-4764-b265-2601d2c7694f",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 176,
+      "status": "High",
+      "recorded_at": "2026-05-02T19:02:00.000Z"
+    },
+    {
+      "reading_id": "48c2908a-b699-42ae-b15d-6853f1afca41",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 133,
+      "status": "High",
+      "recorded_at": "2026-05-03T07:20:00.000Z"
+    },
+    {
+      "reading_id": "8e8666b2-6b3e-4ebd-b776-9faf46074833",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 143,
+      "status": "High",
+      "recorded_at": "2026-05-03T12:28:00.000Z"
+    },
+    {
+      "reading_id": "5a6cd340-b00f-4bd8-9378-7a981dd2cd99",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 154,
+      "status": "High",
+      "recorded_at": "2026-05-03T19:28:00.000Z"
+    },
+    {
+      "reading_id": "2bb74635-04ea-4174-a366-30516c27b7b4",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 138,
+      "status": "High",
+      "recorded_at": "2026-05-04T07:09:00.000Z"
+    },
+    {
+      "reading_id": "979bd619-b0a2-44eb-8140-17ba35f9a9f9",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 153,
+      "status": "High",
+      "recorded_at": "2026-05-04T12:26:00.000Z"
+    },
+    {
+      "reading_id": "7fce6ac7-a5f7-4b16-8c90-49a6b3eef38c",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 136,
+      "status": "High",
+      "recorded_at": "2026-05-05T07:20:00.000Z"
+    },
+    {
+      "reading_id": "74037dce-dbb7-4dcc-8161-864484f82029",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 146,
+      "status": "High",
+      "recorded_at": "2026-05-05T12:21:00.000Z"
+    },
+    {
+      "reading_id": "be66cfe5-ba79-44cf-a0ea-a84aa2c90ef6",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 172,
+      "status": "High",
+      "recorded_at": "2026-05-05T19:03:00.000Z"
+    },
+    {
+      "reading_id": "36a95cbe-402c-4204-9e44-414f0e7e9806",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 113,
+      "status": "High",
+      "recorded_at": "2026-05-06T07:21:00.000Z"
+    },
+    {
+      "reading_id": "590f6cef-626a-4db1-96df-d54cfc28492c",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 141,
+      "status": "High",
+      "recorded_at": "2026-05-06T12:12:00.000Z"
+    },
+    {
+      "reading_id": "4c0b3b51-1733-4294-970f-f4d97fdd910d",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 147,
+      "status": "High",
+      "recorded_at": "2026-05-06T19:16:00.000Z"
+    },
+    {
+      "reading_id": "20435276-44c7-4de5-bc62-ad5e65c13be3",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 168,
+      "status": "High",
+      "recorded_at": "2026-05-07T19:15:00.000Z"
+    },
+    {
+      "reading_id": "26a9d1e2-ee4d-4201-8997-96807970d0d1",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 117,
+      "status": "High",
+      "recorded_at": "2026-05-08T07:18:00.000Z"
+    },
+    {
+      "reading_id": "3c0eb31e-b263-4a5a-be61-74a58378c985",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 152,
+      "status": "High",
+      "recorded_at": "2026-05-08T12:09:00.000Z"
+    },
+    {
+      "reading_id": "d9f4ff8d-20dd-4cce-ab61-cfb861ec39c5",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 172,
+      "status": "High",
+      "recorded_at": "2026-05-08T19:28:00.000Z"
+    },
+    {
+      "reading_id": "996bb2a7-a365-4814-845d-39eca6dc2a5a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 137,
+      "status": "High",
+      "recorded_at": "2026-05-09T07:12:00.000Z"
+    },
+    {
+      "reading_id": "2bc762e2-7292-4492-99f3-f7790d6d78c6",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 166,
+      "status": "High",
+      "recorded_at": "2026-05-09T12:26:00.000Z"
+    },
+    {
+      "reading_id": "22a93dcf-5ca4-47f6-b241-b519f6ea4a6d",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 165,
+      "status": "High",
+      "recorded_at": "2026-05-09T19:22:00.000Z"
+    },
+    {
+      "reading_id": "63c899b1-9266-4a76-83bf-052b8a1e31e7",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 137,
+      "status": "High",
+      "recorded_at": "2026-05-10T07:21:00.000Z"
+    },
+    {
+      "reading_id": "ace0846f-848b-4eea-85e6-f1726bf1dfa9",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 143,
+      "status": "High",
+      "recorded_at": "2026-05-10T12:13:00.000Z"
+    },
+    {
+      "reading_id": "4fc801f7-6539-4d4e-9ebf-36bfc68cf2f2",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 114,
+      "status": "High",
+      "recorded_at": "2026-05-11T07:15:00.000Z"
+    },
+    {
+      "reading_id": "282dcbd6-1722-44ec-ad16-74574fcaf803",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 147,
+      "status": "High",
+      "recorded_at": "2026-05-11T19:25:00.000Z"
+    },
+    {
+      "reading_id": "226c2698-adeb-4f2a-b85a-5d1a422d9ea2",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 118,
+      "status": "High",
+      "recorded_at": "2026-05-12T07:05:00.000Z"
+    },
+    {
+      "reading_id": "1ebfc37e-7704-486a-a2cb-a5e8a59616dd",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 136,
+      "status": "Normal",
+      "recorded_at": "2026-05-12T12:04:00.000Z"
+    },
+    {
+      "reading_id": "b9416d13-ba44-41c9-a3c0-a54ad3911605",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 138,
+      "status": "Normal",
+      "recorded_at": "2026-05-12T19:19:00.000Z"
+    },
+    {
+      "reading_id": "02f11de3-3c57-4b3b-b0e5-7106b5ca3063",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 104,
+      "status": "Normal",
+      "recorded_at": "2026-05-13T07:00:00.000Z"
+    },
+    {
+      "reading_id": "91f4e043-6932-4ce1-9430-281b55ac78b5",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 160,
+      "status": "High",
+      "recorded_at": "2026-05-13T12:27:00.000Z"
+    },
+    {
+      "reading_id": "f7a9e7fb-ce3c-41f9-814b-5a240b6d5fbb",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 126,
+      "status": "High",
+      "recorded_at": "2026-05-14T07:13:00.000Z"
+    },
+    {
+      "reading_id": "360c7a92-8870-4daf-aba2-d709a1aecd56",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 142,
+      "status": "High",
+      "recorded_at": "2026-05-14T19:10:00.000Z"
+    },
+    {
+      "reading_id": "3abf61ee-62b6-4a32-8828-a11adcf32081",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 114,
+      "status": "High",
+      "recorded_at": "2026-05-15T07:27:00.000Z"
+    },
+    {
+      "reading_id": "b32d86f4-dea7-49c5-b58b-5f0eccea30f9",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 140,
+      "status": "Normal",
+      "recorded_at": "2026-05-15T12:02:00.000Z"
+    },
+    {
+      "reading_id": "3405294a-0f04-41a6-9c8d-1fd97335443a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 167,
+      "status": "High",
+      "recorded_at": "2026-05-15T19:04:00.000Z"
+    },
+    {
+      "reading_id": "d80eb432-bd47-44dc-9d99-d9e3b6934939",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 107,
+      "status": "Normal",
+      "recorded_at": "2026-05-16T07:21:00.000Z"
+    },
+    {
+      "reading_id": "25df2ce9-74d4-43ea-831b-bbfd3b456c9a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 160,
+      "status": "High",
+      "recorded_at": "2026-05-16T12:01:00.000Z"
+    },
+    {
+      "reading_id": "0dd76a8e-e636-4beb-8aba-6a146c435a05",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 146,
+      "status": "High",
+      "recorded_at": "2026-05-17T12:03:00.000Z"
+    },
+    {
+      "reading_id": "e6260403-dc98-4881-8432-b1557e79996a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 166,
+      "status": "High",
+      "recorded_at": "2026-05-17T19:00:00.000Z"
+    },
+    {
+      "reading_id": "63ad2746-0e85-4802-ad18-55355528c9eb",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 116,
+      "status": "High",
+      "recorded_at": "2026-05-18T07:16:00.000Z"
+    },
+    {
+      "reading_id": "5632fb68-e4a0-410c-bea3-e5401f55dbac",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 162,
+      "status": "High",
+      "recorded_at": "2026-05-18T12:24:00.000Z"
+    },
+    {
+      "reading_id": "303e7215-1370-4de9-91e6-02117272fc34",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 157,
+      "status": "High",
+      "recorded_at": "2026-05-18T19:08:00.000Z"
+    },
+    {
+      "reading_id": "1c8f1217-697a-4628-8695-22b97981cfdd",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 100,
+      "status": "Normal",
+      "recorded_at": "2026-05-19T07:11:00.000Z"
+    },
+    {
+      "reading_id": "7396334b-25c0-4d14-a22f-3faed275b7d6",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 150,
+      "status": "High",
+      "recorded_at": "2026-05-19T19:00:00.000Z"
+    },
+    {
+      "reading_id": "e5275258-316e-464b-bc39-479b8ddf849e",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 104,
+      "status": "Normal",
+      "recorded_at": "2026-05-20T07:17:00.000Z"
+    },
+    {
+      "reading_id": "b22f75e3-14fb-498b-86e4-db19228e7763",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 143,
+      "status": "High",
+      "recorded_at": "2026-05-20T12:15:00.000Z"
+    },
+    {
+      "reading_id": "3b156a7d-cfdd-4f7f-8fdd-fcb0003e810f",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 128,
+      "status": "Normal",
+      "recorded_at": "2026-05-20T19:01:00.000Z"
+    },
+    {
+      "reading_id": "71e704c5-7fcc-4bf1-9ac0-db963754016d",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 108,
+      "status": "Normal",
+      "recorded_at": "2026-05-21T07:22:00.000Z"
+    },
+    {
+      "reading_id": "39b1cc0b-ecd5-497c-848c-e615435e9e1a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 127,
+      "status": "Normal",
+      "recorded_at": "2026-05-21T12:15:00.000Z"
+    },
+    {
+      "reading_id": "1b90cfc4-0388-44d9-b992-484ff283b3b1",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 150,
+      "status": "High",
+      "recorded_at": "2026-05-21T19:19:00.000Z"
+    },
+    {
+      "reading_id": "cdfd9396-02b8-450c-8502-3ea0f3df4fcf",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 135,
+      "status": "Normal",
+      "recorded_at": "2026-05-22T12:07:00.000Z"
+    },
+    {
+      "reading_id": "03476146-0d90-4a5c-9856-a8bdb6ff697b",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 147,
+      "status": "High",
+      "recorded_at": "2026-05-22T19:16:00.000Z"
+    },
+    {
+      "reading_id": "62a29717-32a4-4610-ad98-10fcfc5f8c7c",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 93,
+      "status": "Normal",
+      "recorded_at": "2026-05-23T07:27:00.000Z"
+    },
+    {
+      "reading_id": "919e8079-593b-4c5b-8d43-b5d2fc4360b1",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 149,
+      "status": "High",
+      "recorded_at": "2026-05-23T12:17:00.000Z"
+    },
+    {
+      "reading_id": "91f30d2a-a24b-4dbb-ad76-cebcf1a0072a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 111,
+      "status": "High",
+      "recorded_at": "2026-05-24T07:20:00.000Z"
+    },
+    {
+      "reading_id": "5d6bca91-1e29-4a04-a576-ccb03aa21b86",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 122,
+      "status": "Normal",
+      "recorded_at": "2026-05-24T12:11:00.000Z"
+    },
+    {
+      "reading_id": "f47fa0d8-5845-4300-8a1a-42801aa97e2a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 132,
+      "status": "Normal",
+      "recorded_at": "2026-05-24T19:02:00.000Z"
+    },
+    {
+      "reading_id": "79decc6b-ab37-4447-b80d-0236facbcb68",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "Before Meal",
+      "sugar_level": 150,
+      "status": "High",
+      "recorded_at": "2026-05-25T19:12:00.000Z"
+    },
+    {
+      "reading_id": "7018f169-d243-47d3-a37d-8a996f3b9a3a",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 110,
+      "status": "Normal",
+      "recorded_at": "2026-05-26T07:21:00.000Z"
+    },
+    {
+      "reading_id": "192ffde4-dfb1-46c0-abee-a0acbc359da1",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "Before Meal",
+      "sugar_level": 122,
+      "status": "Normal",
+      "recorded_at": "2026-05-26T12:17:00.000Z"
+    },
+    {
+      "reading_id": "6cd9cbfb-c665-44f4-96e9-8b133b4159a0",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "After Meal",
+      "sugar_level": 140,
+      "status": "Normal",
+      "recorded_at": "2026-05-26T06:02:07.539Z"
+    },
+    {
+      "reading_id": "e48a0676-006d-4cd6-8c2c-1c331f2d38b2",
+      "patient_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 110,
+      "status": "Normal",
+      "recorded_at": "2026-05-23T06:09:56.370Z"
+    },
+    {
+      "reading_id": "21e4f013-db6f-4086-adc1-9b57a6b9fe78",
+      "patient_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 155,
+      "status": "High",
+      "recorded_at": "2026-05-24T06:09:56.370Z"
+    },
+    {
+      "reading_id": "c0b5bf7e-1226-439b-8bdd-0bd09e6207df",
+      "patient_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 130,
+      "status": "Normal",
+      "recorded_at": "2026-05-25T06:09:56.370Z"
+    },
+    {
+      "reading_id": "181d2211-494b-4fb3-a754-88db0375f467",
+      "patient_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 72,
+      "status": "Low",
+      "recorded_at": "2026-05-26T06:09:56.370Z"
+    },
+    {
+      "reading_id": "145c62a0-3d70-4df5-9b99-ac8c9d8fde80",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 209,
+      "status": "High",
+      "recorded_at": "2026-05-26T06:40:55.332Z"
+    },
+    {
+      "reading_id": "453428f4-76f7-4565-b8b9-ee3920262375",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 177,
+      "status": "High",
+      "recorded_at": "2026-05-26T06:48:42.192Z"
+    },
+    {
+      "reading_id": "6dc32b22-9241-45a9-9f01-5503dcb894dc",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 180,
+      "status": "High",
+      "recorded_at": "2026-05-26T06:50:11.381Z"
+    },
+    {
+      "reading_id": "6ef974d6-1e3d-424d-a3ae-ae0fbfee7e85",
+      "patient_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 110,
+      "status": "Normal",
+      "recorded_at": "2026-05-23T09:00:47.301Z"
+    },
+    {
+      "reading_id": "14d4a91b-2fc6-41d5-ae0c-aea1328f2186",
+      "patient_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 155,
+      "status": "High",
+      "recorded_at": "2026-05-24T09:00:47.301Z"
+    },
+    {
+      "reading_id": "1b1dac13-fdb9-4288-a73b-786aee5a6398",
+      "patient_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "meal_type": "Dinner",
+      "timing": "After Meal",
+      "sugar_level": 130,
+      "status": "Normal",
+      "recorded_at": "2026-05-25T09:00:47.301Z"
+    },
+    {
+      "reading_id": "55f63a2f-1f30-4f55-8394-3fae1708509e",
+      "patient_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 72,
+      "status": "Low",
+      "recorded_at": "2026-05-26T09:00:47.301Z"
+    },
+    {
+      "reading_id": "2384a3b8-bfae-4e91-90e8-dd24f494c065",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Lunch",
+      "timing": "After Meal",
+      "sugar_level": 500,
+      "status": "High",
+      "recorded_at": "2026-05-26T09:43:47.862Z"
+    }
+  ],
+  "messages": [
+    {
+      "message_id": "m-1",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "Your morning fasting blood sugars are looking much more stable. Keep up the great work!",
+      "sent_at": "2026-05-26T01:24:14.837Z"
+    },
+    {
+      "message_id": "m-2",
+      "sender_id": "p-uuid-1",
+      "receiver_id": "d-uuid-1",
+      "message_text": "Thank you Dr. Sarah! I have been walking for 20 minutes after dinner as well.",
+      "sent_at": "2026-05-26T02:24:14.837Z"
+    },
+    {
+      "message_id": "69319090-1260-4645-bd3d-692433cd5682",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "message_text": "Your morning fasting blood sugars are looking much more stable. Keep up the great work!",
+      "sent_at": "2026-05-26T02:09:56.371Z"
+    },
+    {
+      "message_id": "1df74049-e59f-4d74-beba-2867a30a2a1b",
+      "sender_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "receiver_id": "d-uuid-1",
+      "message_text": "Thank you Dr. Sarah! I have been walking for 20 minutes after dinner as well.",
+      "sent_at": "2026-05-26T03:09:56.371Z"
+    },
+    {
+      "message_id": "a4396cff-fbc5-40ca-a3b2-e400f3676bab",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "Good",
+      "sent_at": "2026-05-26T06:51:30.187Z"
+    },
+    {
+      "message_id": "d2a3dfbd-1200-4c80-bcf9-b6285e77e53a",
+      "sender_id": "c-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "Hi",
+      "sent_at": "2026-05-26T06:51:56.904Z"
+    },
+    {
+      "message_id": "d0e1a50a-46c9-4eba-bb62-7458e8b64fd4",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "message_text": "Your morning fasting blood sugars are looking much more stable. Keep up the great work!",
+      "sent_at": "2026-05-26T05:00:47.302Z"
+    },
+    {
+      "message_id": "d97fefb5-2854-43d6-ad89-dc798de66d3d",
+      "sender_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "receiver_id": "d-uuid-1",
+      "message_text": "Thank you Dr. Sarah! I have been walking for 20 minutes after dinner as well.",
+      "sent_at": "2026-05-26T06:00:47.302Z"
+    },
+    {
+      "message_id": "224c9ed0-d1e9-4cd3-b12a-15cce2d2e205",
+      "sender_id": "c-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "hi",
+      "sent_at": "2026-05-26T09:03:22.517Z"
+    },
+    {
+      "message_id": "1ec55a07-7022-4551-9342-1765b9a7ce0a",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "hy",
+      "sent_at": "2026-05-26T09:17:21.413Z"
+    },
+    {
+      "message_id": "ce524884-62ba-4c6d-9bfd-decf06cbba3f",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "hy",
+      "sent_at": "2026-05-26T09:17:35.550Z"
+    },
+    {
+      "message_id": "a0da9981-983f-4e12-8c52-a18ca667ca07",
+      "sender_id": "d-uuid-1",
+      "receiver_id": "p-uuid-1",
+      "message_text": "guy",
+      "sent_at": "2026-05-26T09:17:42.276Z"
+    }
+  ],
+  "notifications": [
+    {
+      "notification_id": "n-1",
+      "user_id": "p-uuid-1",
+      "type": "Alert",
+      "message": "Fasting reading was low yesterday morning.",
+      "is_read": true,
+      "created_at": "2026-05-26T05:24:14.837Z"
+    }
+  ],
+  "connection_requests": [
+    {
+      "request_id": "cef1e748-276b-479e-9884-d87cfd0cdcef",
+      "from_id": "p-uuid-1",
+      "to_id": "d-uuid-1",
+      "status": "accepted",
+      "created_at": "2026-05-26T09:15:18.936Z"
+    }
+  ]
+}
