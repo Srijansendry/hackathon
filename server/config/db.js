@@ -406,7 +406,16 @@ const fallbackQuery = async (text, params = []) => {
     return { rows: [{ count }] }
   }
 
-  // UPDATE notifications SET is_read = TRUE
+  // UPDATE notifications SET is_read = TRUE WHERE user_id = $1 (mark ALL read)
+  if (sql.includes('UPDATE notifications SET is_read = TRUE') && sql.includes('user_id = $1')) {
+    memoryDb.notifications = memoryDb.notifications.map(n =>
+      n.user_id === params[0] ? { ...n, is_read: true } : n
+    )
+    saveMemoryDb()
+    return { rows: [] }
+  }
+
+  // UPDATE notifications SET is_read = TRUE WHERE notification_id = $1 (mark single read)
   if (sql.includes('UPDATE notifications SET is_read = TRUE')) {
     memoryDb.notifications = memoryDb.notifications.map(n =>
       n.notification_id === params[0] ? { ...n, is_read: true } : n

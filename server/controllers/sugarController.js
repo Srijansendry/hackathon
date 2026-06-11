@@ -1,4 +1,5 @@
 import pool from '../config/db.js'
+import { sendBloodSugarAlert } from '../services/notificationService.js'
 
 function calcStatus(level) {
   if (level < 80) return 'Low'
@@ -12,13 +13,21 @@ export async function addReading(req, res) {
   if (!mealType || !timing || !sugarLevel) {
     return res.status(400).json({ error: 'All fields required' })
   }
-  const status = calcStatus(parseInt(sugarLevel))
+  const level = parseInt(sugarLevel)
+  const status = calcStatus(level)
   try {
     const result = await pool.query(
       'INSERT INTO sugar_readings (patient_id, meal_type, timing, sugar_level, status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [patientId, mealType, timing, parseInt(sugarLevel), status]
+      [patientId, mealType, timing, level, status]
     )
     res.status(201).json(result.rows[0])
+
+    // Auto-trigger push alert for High/Low readings (non-blocking, won't affect the API response)
+    if (status !== 'Normal') {
+      sendBloodSugarAlert(patientId, level, mealType, timing).catch(err =>
+        console.error('[AutoAlert] Blood sugar alert error:', err.message)
+      )
+    }
   } catch {
     res.status(500).json({ error: 'Failed to add reading' })
   }

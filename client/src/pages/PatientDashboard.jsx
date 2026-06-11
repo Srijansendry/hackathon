@@ -8,6 +8,7 @@ import SugarLineChart from '../charts/SugarLineChart'
 import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
 import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
+import NotificationPermissionBanner from '../components/NotificationPermissionBanner'
 import { addReading, getReadings, getStats } from '../services/readingService'
 import api from '../services/api'
 import { io } from 'socket.io-client'
@@ -354,6 +355,7 @@ export default function PatientDashboard() {
       <Sidebar role="Patient" />
       <div className="flex-1 flex flex-col overflow-hidden min-h-0 min-w-0">
         <Navbar title="Glucolyse Overview" />
+        <NotificationPermissionBanner />
 
         <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
 

@@ -2,22 +2,7 @@ import pool from '../config/db.js'
 import { sendPushNotification } from '../firebaseAdmin.js'
 import { sendNotificationToUser } from '../services/notificationService.js'
 
-export async function sendNotification(req, res) {
-  const { userId, type, message } = req.body
-  if (!userId || !type || !message) {
-    return res.status(400).json({ error: 'All fields required' })
-  }
-  try {
-    const result = await pool.query(
-      'INSERT INTO notifications (user_id, type, message) VALUES ($1, $2, $3) RETURNING *',
-      [userId, type, message]
-    )
-    res.status(201).json(result.rows[0])
-  } catch {
-    res.status(500).json({ error: 'Failed to send notification' })
-  }
-}
-
+/** Return all notifications for the logged-in user, newest first */
 export async function getNotifications(req, res) {
   const userId = req.user.userId
   try {
@@ -31,6 +16,7 @@ export async function getNotifications(req, res) {
   }
 }
 
+/** Count of unread notifications for the logged-in user */
 export async function getUnreadCount(req, res) {
   const userId = req.user.userId
   try {
@@ -44,6 +30,7 @@ export async function getUnreadCount(req, res) {
   }
 }
 
+/** Mark a single notification as read */
 export async function markRead(req, res) {
   const { id } = req.params
   try {
@@ -54,6 +41,18 @@ export async function markRead(req, res) {
   }
 }
 
+/** Mark ALL notifications as read for the logged-in user */
+export async function markAllRead(req, res) {
+  const userId = req.user.userId
+  try {
+    await pool.query('UPDATE notifications SET is_read = TRUE WHERE user_id = $1', [userId])
+    res.json({ success: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to mark all as read' })
+  }
+}
+
+/** Save (or update) FCM token for the logged-in user */
 export async function saveFCMToken(req, res) {
   const userId = req.user.userId
   const { token } = req.body
@@ -66,6 +65,7 @@ export async function saveFCMToken(req, res) {
   }
 }
 
+/** Remove FCM token (unsubscribe from push) */
 export async function removeFCMToken(req, res) {
   const userId = req.user.userId
   try {
@@ -76,13 +76,18 @@ export async function removeFCMToken(req, res) {
   }
 }
 
+/**
+ * Push a notification to a specific user (doctor/caretaker → patient).
+ * Body: { userId, title, body, type }
+ * type: Medicine | High Sugar | Low Sugar | Appointment | Emergency | Alert
+ */
 export async function pushToUser(req, res) {
-  const { userId, title, body } = req.body
+  const { userId, title, body, type = 'Alert' } = req.body
   if (!userId || !title || !body) {
     return res.status(400).json({ error: 'userId, title, and body are required' })
   }
   try {
-    const result = await sendNotificationToUser(userId, title, body, 'Alert')
+    const result = await sendNotificationToUser(userId, title, body, type)
     if (result.success) {
       res.json({ success: true, messageId: result.messageId })
     } else {
@@ -93,9 +98,10 @@ export async function pushToUser(req, res) {
   }
 }
 
+/** Send a test push to the logged-in user — for verifying FCM setup */
 export async function testPushNotification(req, res) {
   const userId = req.user.userId
-  const { title = 'Test Notification', body = 'Firebase is working!' } = req.body
+  const { title = 'Glucolyse Test', body = 'Push notifications are working!' } = req.body
   try {
     const result = await sendNotificationToUser(userId, title, body, 'Alert')
     if (result.success) {
@@ -105,5 +111,22 @@ export async function testPushNotification(req, res) {
     }
   } catch (err) {
     res.status(500).json({ error: 'Test failed', message: err.message })
+  }
+}
+
+/** Legacy direct-insert route (kept for backward compat) */
+export async function sendNotification(req, res) {
+  const { userId, type, message } = req.body
+  if (!userId || !type || !message) {
+    return res.status(400).json({ error: 'All fields required' })
+  }
+  try {
+    const result = await pool.query(
+      'INSERT INTO notifications (user_id, type, message) VALUES ($1, $2, $3) RETURNING *',
+      [userId, type, message]
+    )
+    res.status(201).json(result.rows[0])
+  } catch {
+    res.status(500).json({ error: 'Failed to send notification' })
   }
 }

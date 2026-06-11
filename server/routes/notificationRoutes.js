@@ -4,6 +4,7 @@ import {
   getNotifications,
   getUnreadCount,
   markRead,
+  markAllRead,
   saveFCMToken,
   removeFCMToken,
   testPushNotification,
@@ -13,13 +14,20 @@ import { verifyToken } from '../middlewares/auth.js'
 
 const router = Router()
 
-router.post('/send', verifyToken, sendNotification)
+// Notification CRUD
 router.get('/', verifyToken, getNotifications)
 router.get('/unread', verifyToken, getUnreadCount)
 router.patch('/:id/read', verifyToken, markRead)
+router.post('/mark-all-read', verifyToken, markAllRead)
 
+// Legacy direct insert
+router.post('/send', verifyToken, sendNotification)
+
+// FCM token management
 router.post('/save-token', verifyToken, saveFCMToken)
 router.delete('/remove-token', verifyToken, removeFCMToken)
+
+// Push delivery
 router.post('/test', verifyToken, testPushNotification)
 router.post('/push', verifyToken, pushToUser)
 
