@@ -24,10 +24,10 @@ export function usePushNotifications({ onForegroundNotification } = {}) {
       await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
       await navigator.serviceWorker.ready
 
-      const token = await getFCMToken()
+      const { token, error: tokenError } = await getFCMToken()
       if (!token) {
         setTokenStatus('failed')
-        setError('Could not get notification token')
+        setError(tokenError || 'Could not get notification token')
         return
       }
 

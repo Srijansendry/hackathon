@@ -44,7 +44,6 @@ build = ["bash", "-c", "cd client && npm install && npm run build"]
 [userenv.shared]
 FIREBASE_PROJECT_ID = "glucolyse-6c57e"
 FIREBASE_CLIENT_EMAIL = "firebase-adminsdk-fbsvc@glucolyse-6c57e.iam.gserviceaccount.com"
-VITE_FIREBASE_API_KEY = "AIzaSyD-placeholder"
 VITE_FIREBASE_AUTH_DOMAIN = "glucolyse-6c57e.firebaseapp.com"
 VITE_FIREBASE_PROJECT_ID = "glucolyse-6c57e"
 VITE_FIREBASE_STORAGE_BUCKET = "glucolyse-6c57e.firebasestorage.app"
