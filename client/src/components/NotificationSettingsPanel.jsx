@@ -16,8 +16,16 @@ export default function NotificationSettingsPanel() {
     try {
       await testPushNotification({ title: 'Glucolyse Test', body: 'Push notifications are working!' })
       setTestResult({ success: true, message: 'Notification sent! Check your browser.' })
-    } catch {
-      setTestResult({ success: false, message: 'Test failed. Make sure notifications are enabled.' })
+    } catch (err) {
+      const reason = err?.response?.data?.reason
+      const msg = reason === 'no_token'
+        ? 'Token not registered. Disable and re-enable notifications to fix this.'
+        : reason === 'not_initialized'
+        ? 'Push service not configured on the server.'
+        : reason === 'invalid_token'
+        ? 'Your token has expired. Disable and re-enable notifications.'
+        : err?.response?.data?.message || 'Test failed. Please try again.'
+      setTestResult({ success: false, message: msg })
     } finally {
       setTesting(false)
     }

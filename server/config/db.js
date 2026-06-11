@@ -181,6 +181,12 @@ const fallbackQuery = async (text, params = []) => {
     return { rows: user ? [user] : [] }
   }
 
+  // SELECT fcm_token (or any cols) FROM users WHERE user_id = $1 (no alias, no JOIN)
+  if (sql.includes('FROM users') && sql.includes('user_id = $1') && !sql.includes('JOIN') && !sql.includes('role')) {
+    const user = memoryDb.users.find(u => u.user_id === params[0])
+    return { rows: user ? [user] : [] }
+  }
+
   // INSERT INTO users (extended with optional profile fields)
   if (sql.includes('INSERT INTO users')) {
     const newUser = {
@@ -202,7 +208,14 @@ const fallbackQuery = async (text, params = []) => {
     return { rows: [newUser] }
   }
 
-  // UPDATE users SET fcm_token (save FCM token)
+  // UPDATE users SET fcm_token = NULL WHERE user_id = $1 (remove token — one param)
+  if (sql.includes('UPDATE users SET fcm_token = NULL') && sql.includes('WHERE user_id =')) {
+    const u = memoryDb.users.find(u => u.user_id === params[0])
+    if (u) { u.fcm_token = null; saveMemoryDb() }
+    return { rows: [] }
+  }
+
+  // UPDATE users SET fcm_token = $1 WHERE user_id = $2 (save token — two params)
   if (sql.includes('UPDATE users SET fcm_token =') && sql.includes('WHERE user_id =')) {
     const u = memoryDb.users.find(u => u.user_id === params[1])
     if (u) { u.fcm_token = params[0]; saveMemoryDb() }
