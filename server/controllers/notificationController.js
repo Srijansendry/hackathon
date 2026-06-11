@@ -80,6 +80,11 @@ export async function removeFCMToken(req, res) {
  * Push a notification to a specific user (doctor/caretaker → patient).
  * Body: { userId, title, body, type }
  * type: Medicine | High Sugar | Low Sugar | Appointment | Emergency | Alert
+ *
+ * NOTE: sendNotificationToUser ALWAYS saves to the DB first, then attempts FCM.
+ * So even when the patient has no push token, the notification lands in their
+ * Notification Center. We return 200 in that case so the sender knows it was
+ * delivered to the inbox — just not as a push banner.
  */
 export async function pushToUser(req, res) {
   const { userId, title, body, type = 'Alert' } = req.body
@@ -89,10 +94,15 @@ export async function pushToUser(req, res) {
   try {
     const result = await sendNotificationToUser(userId, title, body, type)
     if (result.success) {
-      res.json({ success: true, messageId: result.messageId })
-    } else {
-      res.status(400).json({ success: false, reason: result.reason, message: result.message })
+      // Full success — DB saved + push delivered
+      return res.json({ success: true, pushed: true, messageId: result.messageId })
     }
+    if (result.reason === 'no_token' || result.reason === 'invalid_token') {
+      // Partial success — saved to DB inbox but patient hasn't enabled push notifications
+      return res.json({ success: true, pushed: false, reason: result.reason })
+    }
+    // Genuine failure (FCM config error, network error, etc.)
+    res.status(500).json({ success: false, reason: result.reason, message: result.message })
   } catch (err) {
     res.status(500).json({ error: 'Push failed', message: err.message })
   }

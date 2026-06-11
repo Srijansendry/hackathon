@@ -15,7 +15,8 @@
       "email": "doctor@glucolyse.com",
       "password_hash": "$2b$10$XGLJd7XBVvf784yHImK1eO.SpytHPvNrPPX6PJ.yMowVQTC6.dbwO",
       "role": "Doctor",
-      "created_at": "2026-05-26T05:24:14.837Z"
+      "created_at": "2026-05-26T05:24:14.837Z",
+      "fcm_token": "eCOiRtUegsUXXAUblz-Ty-:APA91bEXIIqakvBJHQ7PlQhwJw461dyvdUMgw-YQ9iOaDo0_5sk8sGhsxgi0LGZ-dOXKez5ezOIVnB0zsQF0R5pBjTEl3-rhVZ7j6CYf4Km9wYL11HXRsYY"
     },
     {
       "user_id": "c-uuid-1",
@@ -808,6 +809,15 @@
       "sugar_level": 500,
       "status": "High",
       "recorded_at": "2026-05-26T09:43:47.862Z"
+    },
+    {
+      "reading_id": "eb15548f-1e9a-46ec-bda0-cf6d0252c882",
+      "patient_id": "p-uuid-1",
+      "meal_type": "Breakfast",
+      "timing": "Before Meal",
+      "sugar_level": 150,
+      "status": "High",
+      "recorded_at": "2026-06-11T19:43:27.467Z"
     }
   ],
   "messages": [
@@ -952,6 +962,62 @@
       "message": "Glucolyse Test: Push notifications are working!",
       "is_read": true,
       "created_at": "2026-06-11T19:38:37.592Z"
+    },
+    {
+      "notification_id": "a2b2d7fd-36ce-4ecc-986a-8aefe36ab7bf",
+      "user_id": "p-uuid-1",
+      "type": "Alert",
+      "message": "Glucolyse Test: Push notifications are working!",
+      "is_read": false,
+      "created_at": "2026-06-11T19:40:37.264Z"
+    },
+    {
+      "notification_id": "9394973e-3196-41d8-a4bb-2bb11d3fb98a",
+      "user_id": "p-uuid-1",
+      "type": "Alert",
+      "message": "Glucolyse Test: Push notifications are working!",
+      "is_read": false,
+      "created_at": "2026-06-11T19:41:13.079Z"
+    },
+    {
+      "notification_id": "5127bd93-c6cb-4b1b-a587-2ff3454d587d",
+      "user_id": "d-uuid-1",
+      "type": "Alert",
+      "message": "Glucolyse Test: Push notifications are working!",
+      "is_read": false,
+      "created_at": "2026-06-11T19:41:52.799Z"
+    },
+    {
+      "notification_id": "874137f9-d633-4c50-b879-3eb6d2cc856b",
+      "user_id": "p-uuid-1",
+      "type": "High Sugar",
+      "message": "High Blood Sugar Alert: Your before meal breakfast reading is 150 mg/dL — above the safe range. Please monitor closely.",
+      "is_read": true,
+      "created_at": "2026-06-11T19:43:27.471Z"
+    },
+    {
+      "notification_id": "2049ed20-3d95-4c09-a7e3-9fd7acdd7d18",
+      "user_id": "d-uuid-1",
+      "type": "High Sugar",
+      "message": "Patient Alert: High Blood Sugar: Emily Davis's before meal breakfast reading is 150 mg/dL — above safe range.",
+      "is_read": false,
+      "created_at": "2026-06-11T19:43:27.480Z"
+    },
+    {
+      "notification_id": "b9e9684e-81cb-485d-9967-881889bace32",
+      "user_id": "c-uuid-1",
+      "type": "High Sugar",
+      "message": "Patient Alert: High Blood Sugar: Emily Davis's before meal breakfast reading is 150 mg/dL — above safe range.",
+      "is_read": false,
+      "created_at": "2026-06-11T19:43:27.481Z"
+    },
+    {
+      "notification_id": "84c32892-15f8-406a-adcd-2cb3d08ec450",
+      "user_id": "p-uuid-1",
+      "type": "Alert",
+      "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
+      "is_read": true,
+      "created_at": "2026-06-11T19:44:16.314Z"
     }
   ],
   "connection_requests": [
