@@ -27,7 +27,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd client && npm install && npm run build && cd ../server && npm install && NODE_ENV=production PORT=5000 node server.js"
+args = "bash smart-install.sh"
 waitForPort = 5000
 
 [[ports]]
