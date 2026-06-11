@@ -8,6 +8,7 @@ import SugarLineChart from '../charts/SugarLineChart'
 import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
 import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
+import SendNotificationModal from '../components/SendNotificationModal'
 import api from '../services/api'
 import { io } from 'socket.io-client'
 
@@ -142,6 +143,7 @@ export default function DoctorDashboard() {
   const [socket, setSocket] = useState(null)
   const [pendingRequests, setPendingRequests] = useState([])
   const [respondingId, setRespondingId] = useState(null)
+  const [notifPatient, setNotifPatient] = useState(null)
 
   const fetchPatients = async () => {
     try {
@@ -326,7 +328,18 @@ export default function DoctorDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h4 className="text-xs font-bold text-text-heading truncate">{p.name}</h4>
-                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-500 shrink-0 ml-1">High</span>
+                        <div className="flex items-center gap-1 shrink-0 ml-1">
+                          <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-500">High</span>
+                          <button
+                            onClick={e => { e.stopPropagation(); setNotifPatient(p) }}
+                            title="Send notification"
+                            className="p-1 rounded-lg hover:bg-primary/10 text-text-muted hover:text-primary transition-colors cursor-pointer"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       <p className="text-[10px] text-text-secondary mt-0.5 truncate">{p.email}</p>
                     </div>
@@ -366,12 +379,23 @@ export default function DoctorDashboard() {
                       )}
                     </div>
                   </div>
-                  <button className="bg-surface-card hover:bg-surface-elevated text-text-body px-4 py-2.5 border border-surface-border rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
-                    <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" />
-                    </svg>
-                    Schedule Consult
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setNotifPatient(selectedPatient)}
+                      className="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                      </svg>
+                      Send Alert
+                    </button>
+                    <button className="bg-surface-card hover:bg-surface-elevated text-text-body px-4 py-2.5 border border-surface-border rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" />
+                      </svg>
+                      Schedule Consult
+                    </button>
+                  </div>
                 </div>
 
                 {/* Stats + Glucose Ring */}
@@ -509,6 +533,10 @@ export default function DoctorDashboard() {
 
         </main>
       </div>
+
+      {notifPatient && (
+        <SendNotificationModal patient={notifPatient} onClose={() => setNotifPatient(null)} />
+      )}
     </div>
   )
 }

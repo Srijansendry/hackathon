@@ -6,7 +6,8 @@ import {
   markRead,
   saveFCMToken,
   removeFCMToken,
-  testPushNotification
+  testPushNotification,
+  pushToUser
 } from '../controllers/notificationController.js'
 import { verifyToken } from '../middlewares/auth.js'
 
@@ -20,5 +21,6 @@ router.patch('/:id/read', verifyToken, markRead)
 router.post('/save-token', verifyToken, saveFCMToken)
 router.delete('/remove-token', verifyToken, removeFCMToken)
 router.post('/test', verifyToken, testPushNotification)
+router.post('/push', verifyToken, pushToUser)
 
 export default router

@@ -7,6 +7,7 @@ import StatCard from '../components/StatCard'
 import SugarLineChart from '../charts/SugarLineChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
 import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
+import SendNotificationModal from '../components/SendNotificationModal'
 import api from '../services/api'
 import { io } from 'socket.io-client'
 
@@ -193,6 +194,7 @@ export default function CaretakerDashboard() {
   const [socket, setSocket] = useState(null)
   const [pendingRequests, setPendingRequests] = useState([])
   const [respondingId, setRespondingId] = useState(null)
+  const [showNotifModal, setShowNotifModal] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -350,15 +352,26 @@ export default function CaretakerDashboard() {
 
             {/* Patient badge */}
             {patient && (
-              <div className="flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-2xl px-4 py-3 shadow-sm hover-lift transition-all duration-300 shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center font-bold text-teal-700 text-sm">
-                  {patient.name?.charAt(0)}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-2xl px-4 py-3 shadow-sm hover-lift transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center font-bold text-teal-700 text-sm">
+                    {patient.name?.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-teal-500 uppercase tracking-wider">Assigned Patient</p>
+                    <p className="text-sm font-bold text-teal-900">{patient.name}</p>
+                    {patient.blood_type && <p className="text-[10px] text-teal-600">🩸 {patient.blood_type}</p>}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold text-teal-500 uppercase tracking-wider">Assigned Patient</p>
-                  <p className="text-sm font-bold text-teal-900">{patient.name}</p>
-                  {patient.blood_type && <p className="text-[10px] text-teal-600">🩸 {patient.blood_type}</p>}
-                </div>
+                <button
+                  onClick={() => setShowNotifModal(true)}
+                  className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                  </svg>
+                  Send Alert
+                </button>
               </div>
             )}
           </div>
@@ -459,6 +472,10 @@ export default function CaretakerDashboard() {
 
         </main>
       </div>
+
+      {showNotifModal && patient && (
+        <SendNotificationModal patient={patient} onClose={() => setShowNotifModal(false)} />
+      )}
     </div>
   )
 }

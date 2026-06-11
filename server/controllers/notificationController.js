@@ -76,6 +76,23 @@ export async function removeFCMToken(req, res) {
   }
 }
 
+export async function pushToUser(req, res) {
+  const { userId, title, body } = req.body
+  if (!userId || !title || !body) {
+    return res.status(400).json({ error: 'userId, title, and body are required' })
+  }
+  try {
+    const result = await sendNotificationToUser(userId, title, body, 'Alert')
+    if (result.success) {
+      res.json({ success: true, messageId: result.messageId })
+    } else {
+      res.status(400).json({ success: false, reason: result.reason, message: result.message })
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Push failed', message: err.message })
+  }
+}
+
 export async function testPushNotification(req, res) {
   const userId = req.user.userId
   const { title = 'Test Notification', body = 'Firebase is working!' } = req.body
