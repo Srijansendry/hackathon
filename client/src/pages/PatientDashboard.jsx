@@ -7,6 +7,7 @@ import StatCard from '../components/StatCard'
 import SugarLineChart from '../charts/SugarLineChart'
 import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
+import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import { addReading, getReadings, getStats } from '../services/readingService'
 import api from '../services/api'
 import { io } from 'socket.io-client'
@@ -633,6 +634,9 @@ export default function PatientDashboard() {
           {(user?.bloodType || user?.dateOfBirth || user?.emergencyContact || user?.phone) && (
             <HealthProfileCard user={user} />
           )}
+
+          {/* ── Notification Settings ── */}
+          <NotificationSettingsPanel />
 
         </main>
       </div>

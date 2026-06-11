@@ -7,6 +7,7 @@ import StatCard from '../components/StatCard'
 import SugarLineChart from '../charts/SugarLineChart'
 import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
+import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import api from '../services/api'
 import { io } from 'socket.io-client'
 
@@ -502,6 +503,10 @@ export default function DoctorDashboard() {
               </div>
             )}
           </div>
+
+          {/* ── Notification Settings ── */}
+          <NotificationSettingsPanel />
+
         </main>
       </div>
     </div>

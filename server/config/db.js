@@ -202,6 +202,13 @@ const fallbackQuery = async (text, params = []) => {
     return { rows: [newUser] }
   }
 
+  // UPDATE users SET fcm_token (save FCM token)
+  if (sql.includes('UPDATE users SET fcm_token =') && sql.includes('WHERE user_id =')) {
+    const u = memoryDb.users.find(u => u.user_id === params[1])
+    if (u) { u.fcm_token = params[0]; saveMemoryDb() }
+    return { rows: [] }
+  }
+
   // UPDATE users SET ... (profile update)
   if (sql.includes('UPDATE users SET') && sql.includes('WHERE user_id =')) {
     const userId = params[params.length - 1]

@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar'
 import StatCard from '../components/StatCard'
 import SugarLineChart from '../charts/SugarLineChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
+import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import api from '../services/api'
 import { io } from 'socket.io-client'
 
@@ -452,6 +453,9 @@ export default function CaretakerDashboard() {
               </div>
             </div>
           )}
+
+          {/* ── Notification Settings ── */}
+          <NotificationSettingsPanel />
 
         </main>
       </div>

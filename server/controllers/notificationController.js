@@ -1,4 +1,6 @@
 import pool from '../config/db.js'
+import { sendPushNotification } from '../firebaseAdmin.js'
+import { sendNotificationToUser } from '../services/notificationService.js'
 
 export async function sendNotification(req, res) {
   const { userId, type, message } = req.body
@@ -49,5 +51,42 @@ export async function markRead(req, res) {
     res.json({ success: true })
   } catch {
     res.status(500).json({ error: 'Failed to mark as read' })
+  }
+}
+
+export async function saveFCMToken(req, res) {
+  const userId = req.user.userId
+  const { token } = req.body
+  if (!token) return res.status(400).json({ error: 'Token required' })
+  try {
+    await pool.query('UPDATE users SET fcm_token = $1 WHERE user_id = $2', [token, userId])
+    res.json({ success: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to save token' })
+  }
+}
+
+export async function removeFCMToken(req, res) {
+  const userId = req.user.userId
+  try {
+    await pool.query('UPDATE users SET fcm_token = NULL WHERE user_id = $1', [userId])
+    res.json({ success: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to remove token' })
+  }
+}
+
+export async function testPushNotification(req, res) {
+  const userId = req.user.userId
+  const { title = 'Test Notification', body = 'Firebase is working!' } = req.body
+  try {
+    const result = await sendNotificationToUser(userId, title, body, 'Alert')
+    if (result.success) {
+      res.json({ success: true, messageId: result.messageId })
+    } else {
+      res.status(400).json({ success: false, reason: result.reason, message: result.message })
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Test failed', message: err.message })
   }
 }
