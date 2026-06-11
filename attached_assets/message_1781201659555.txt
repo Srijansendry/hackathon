@@ -1,0 +1,265 @@
+TASK: Add Firebase Push Notifications to My Existing Website
+
+I have an existing full-stack web application already deployed. I want to add real browser push notifications using Firebase Cloud Messaging (FCM).
+
+Assume I have zero coding knowledge. Do not ask me to manually write code. Analyze my entire codebase and make all required changes automatically.
+
+My Firebase Details
+
+Firebase Project ID:
+
+glucolyse-6c57e
+
+Messaging Sender ID:
+
+332019519481
+
+App ID:
+
+1:332019519481:web:d28043c6feb2032ebdb728
+
+Auth Domain:
+
+glucolyse-6c57e.firebaseapp.com
+
+Storage Bucket:
+
+glucolyse-6c57e.firebasestorage.app
+
+I already generated a Firebase Web Push VAPID Key and will provide it when needed.
+
+GOAL
+
+Implement a complete production-ready Firebase notification system in my website.
+
+The system should:
+
+Ask users for notification permission.
+Generate an FCM token.
+Save the token in the database.
+Associate the token with the logged-in user.
+Handle token refresh automatically.
+Receive notifications while the website is open.
+Receive notifications while the website is closed.
+Work after deployment.
+Allow future notifications from backend APIs.
+Prevent duplicate token storage.
+REQUIRED IMPLEMENTATION
+Frontend
+
+Analyze my frontend and:
+
+Install Firebase
+
+Install all required Firebase packages.
+
+Create Firebase Configuration
+
+Create:
+
+src/firebase.js
+
+or the equivalent location based on my project structure.
+
+Initialize:
+
+Firebase App
+Firebase Cloud Messaging
+Create Service Worker
+
+Create:
+
+public/firebase-messaging-sw.js
+
+Configure it properly for Firebase background notifications.
+
+Permission Request
+
+Create a notification permission flow that:
+
+Runs only after user login
+Requests browser notification permission
+Gracefully handles denial
+Does not repeatedly spam permission requests
+Token Management
+
+Generate the FCM token using:
+
+getToken()
+
+with the Firebase VAPID key.
+
+Store the token.
+
+If the user logs out:
+
+remove token association if needed
+
+If token changes:
+
+automatically update backend
+Foreground Notifications
+
+Implement:
+
+onMessage()
+
+so notifications appear while user is actively using the website.
+
+Display:
+
+title
+body
+click action
+
+using a modern UI notification system.
+
+Backend
+
+Analyze backend automatically.
+
+Implement:
+
+Save Token Endpoint
+
+Create API endpoint:
+
+POST /api/notifications/save-token
+
+Body:
+
+{
+  "token": "fcm_token"
+}
+
+Requirements:
+
+authenticated route
+save token for current user
+prevent duplicates
+Remove Token Endpoint
+
+Create:
+
+DELETE /api/notifications/remove-token
+
+Used during logout.
+
+Database Changes
+
+Add database support.
+
+If using PostgreSQL:
+
+Create appropriate migration.
+
+Example:
+
+fcm_token TEXT
+
+or create a dedicated table if multiple devices are supported.
+
+Design the best scalable approach.
+
+Firebase Admin SDK
+
+Install:
+
+firebase-admin
+
+Configure securely.
+
+Create:
+
+server/firebaseAdmin.js
+
+Store credentials correctly using environment variables.
+
+Do NOT hardcode secrets.
+
+Notification Service
+
+Create reusable service:
+
+sendNotification(userId, title, body)
+
+Features:
+
+fetch user's FCM token
+send notification
+handle invalid tokens
+remove expired tokens automatically
+log failures
+Admin Testing Feature
+
+Create a temporary testing route:
+
+POST /api/notifications/test
+
+Body:
+
+{
+  "title": "Test Notification",
+  "body": "Firebase is working"
+}
+
+This route should send a notification to the currently logged-in user.
+
+UI REQUIREMENTS
+
+Create a settings section:
+
+Notification Settings
+
+Show:
+
+Notifications Enabled
+Notifications Disabled
+Last Token Status
+
+Include:
+
+Enable Notifications
+
+button.
+
+DEPLOYMENT REQUIREMENTS
+
+Ensure solution works on:
+
+Vercel
+Replit
+Render
+Railway
+
+Handle:
+
+HTTPS requirements
+Service worker registration
+Environment variables
+CODE QUALITY REQUIREMENTS
+Analyze my current project structure first.
+Reuse existing notification system if present.
+Do not create duplicate functionality.
+Refactor where necessary.
+Follow best practices.
+Generate all required files automatically.
+Explain every file modified.
+Show full list of changes before applying them.
+After implementation, provide exact testing instructions.
+FINAL OUTPUT REQUIRED
+
+After implementation provide:
+
+Files created
+Files modified
+Database changes
+Environment variables required
+Firebase Console settings required
+How to test notifications locally
+How to test notifications after deployment
+Example API calls for sending notifications
+Any issues found in my existing codebase
+Confirmation that notifications work in foreground and background
+
+Do not give generic instructions. Analyze my actual codebase and implement everything directly.
