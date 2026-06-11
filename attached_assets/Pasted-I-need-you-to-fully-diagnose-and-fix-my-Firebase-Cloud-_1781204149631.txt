@@ -1,0 +1,67 @@
+I need you to fully diagnose and fix my Firebase Cloud Messaging (FCM) notification setup.
+
+Current error in browser console:
+
+FCM getToken error:
+FirebaseError: Installations: Create Installation request failed with error:
+"400 INVALID_ARGUMENT: API key not valid. Please pass a valid API key."
+
+Tasks:
+
+1. Inspect all Firebase-related files:
+
+   * client/src/firebase.js
+   * client/public/firebase-messaging-sw.js
+   * client/src/hooks/usePushNotifications.js
+   * any notification-related components
+   * .env files
+   * vite.config.js
+
+2. Verify that all Firebase environment variables are correctly configured and loaded:
+
+   * VITE_FIREBASE_API_KEY
+   * VITE_FIREBASE_AUTH_DOMAIN
+   * VITE_FIREBASE_PROJECT_ID
+   * VITE_FIREBASE_STORAGE_BUCKET
+   * VITE_FIREBASE_MESSAGING_SENDER_ID
+   * VITE_FIREBASE_APP_ID
+   * VITE_FIREBASE_VAPID_KEY
+
+3. Add temporary debug logs to print:
+
+   * Firebase config values (except secrets should be partially masked)
+   * Whether import.meta.env variables are undefined
+   * Whether Firebase initializes successfully
+   * Whether getToken() is receiving the correct VAPID key
+
+4. Check whether:
+
+   * The API key is missing
+   * The API key is malformed
+   * The wrong Firebase project is being used
+   * Environment variables are not available in production builds
+   * Vercel/Replit environment variables are misconfigured
+
+5. Verify that firebase-messaging-sw.js uses the exact same Firebase project configuration as firebase.js.
+
+6. Verify that the service worker is registering successfully.
+
+7. Fix any issues automatically.
+
+8. After fixing, provide:
+
+   * Every file modified
+   * Exact changes made
+   * Any missing environment variables
+   * Any deployment settings that must be updated
+
+9. Add a test page/button that:
+
+   * Requests notification permission
+   * Calls getToken()
+   * Displays the generated FCM token on screen
+   * Displays detailed Firebase errors if token generation fails
+
+Goal:
+Successfully generate an FCM token and eliminate the error:
+"400 INVALID_ARGUMENT: API key not valid. Please pass a valid API key."
