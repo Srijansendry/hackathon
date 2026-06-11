@@ -38,3 +38,16 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "cd server && node server.js"]
 build = ["bash", "-c", "cd client && npm install && npm run build"]
+
+[userenv]
+
+[userenv.shared]
+FIREBASE_PROJECT_ID = "glucolyse-6c57e"
+FIREBASE_CLIENT_EMAIL = "firebase-adminsdk-fbsvc@glucolyse-6c57e.iam.gserviceaccount.com"
+VITE_FIREBASE_API_KEY = "AIzaSyD-placeholder"
+VITE_FIREBASE_AUTH_DOMAIN = "glucolyse-6c57e.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID = "glucolyse-6c57e"
+VITE_FIREBASE_STORAGE_BUCKET = "glucolyse-6c57e.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID = "332019519481"
+VITE_FIREBASE_APP_ID = "1:332019519481:web:d28043c6feb2032ebdb728"
+VITE_FIREBASE_VAPID_KEY = "BM3kgBQ3prLtXjlyFb9WJANmbr_SwiqvgHuyqPInmjAdUJcvy5PT9Iu0LWHpDX1-cpOuMpesBZYy8uwaGRztcIM"
