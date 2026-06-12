@@ -35,12 +35,15 @@ export default function NotificationSettingsPanel() {
     registered: { color: 'text-emerald-500', bg: 'bg-emerald-500/10', label: 'Enabled', dot: 'bg-emerald-400' },
     loading: { color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Activating…', dot: 'bg-amber-400' },
     denied: { color: 'text-rose-500', bg: 'bg-rose-500/10', label: 'Blocked in browser', dot: 'bg-rose-400' },
-    failed: { color: 'text-rose-500', bg: 'bg-rose-500/10', label: 'Setup failed', dot: 'bg-rose-400' },
+    failed: { color: 'text-amber-500', bg: 'bg-amber-500/10', label: 'Unavailable', dot: 'bg-amber-400' },
     idle: { color: 'text-text-muted', bg: 'bg-surface-elevated', label: 'Disabled', dot: 'bg-text-muted' },
-    unsupported: { color: 'text-text-muted', bg: 'bg-surface-elevated', label: 'Not supported', dot: 'bg-text-muted' },
+    unsupported: { color: 'text-text-muted', bg: 'bg-surface-elevated', label: 'Not configured', dot: 'bg-text-muted' },
   }
 
   const cfg = statusConfig[isDenied ? 'denied' : tokenStatus] || statusConfig.idle
+  const isUnsupported = tokenStatus === 'unsupported'
+
+  if (isUnsupported) return null
 
   return (
     <div className="bg-surface-card border border-surface-border rounded-2xl p-5 space-y-4">
@@ -61,7 +64,7 @@ export default function NotificationSettingsPanel() {
           >
             Disable
           </button>
-        ) : !isDenied ? (
+        ) : !isDenied && tokenStatus !== 'failed' ? (
           <button
             onClick={enable}
             disabled={tokenStatus === 'loading'}
@@ -76,10 +79,6 @@ export default function NotificationSettingsPanel() {
         <p className="text-[10px] text-text-muted leading-relaxed">
           Notifications are blocked. To enable, click the 🔒 lock icon in your browser's address bar and allow notifications for this site.
         </p>
-      )}
-
-      {error && !isDenied && (
-        <p className="text-[10px] text-rose-500">{error}</p>
       )}
 
       {isEnabled && (

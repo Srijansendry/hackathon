@@ -5,14 +5,26 @@ import { saveFCMToken, removeFCMToken } from '../services/notificationService'
 const STORAGE_KEY = 'glucolyse_fcm_token'
 const ASKED_KEY = 'glucolyse_notif_asked'
 
+function isFirebaseConfigured() {
+  return !!(
+    import.meta.env.VITE_FIREBASE_API_KEY &&
+    import.meta.env.VITE_FIREBASE_PROJECT_ID &&
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID
+  )
+}
+
 export function usePushNotifications({ onForegroundNotification } = {}) {
   const [permission, setPermission] = useState(
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   )
-  const [tokenStatus, setTokenStatus] = useState('idle')
+  const [tokenStatus, setTokenStatus] = useState(() => isFirebaseConfigured() ? 'idle' : 'unsupported')
   const [error, setError] = useState(null)
 
   const registerToken = useCallback(async () => {
+    if (!isFirebaseConfigured()) {
+      setTokenStatus('unsupported')
+      return
+    }
     setTokenStatus('loading')
     setError(null)
     try {
@@ -40,8 +52,7 @@ export function usePushNotifications({ onForegroundNotification } = {}) {
       setTokenStatus('registered')
     } catch (err) {
       console.error('Push registration error:', err)
-      setTokenStatus('failed')
-      setError(err.message)
+      setTokenStatus('unsupported')
     }
   }, [])
 

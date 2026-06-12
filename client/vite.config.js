@@ -14,45 +14,50 @@ function firebaseSwPlugin() {
     },
     closeBundle() {
       const get = (key) => viteEnv[key] || process.env[key] || ''
+      const apiKey = get('VITE_FIREBASE_API_KEY')
       const sw = `importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
 
-firebase.initializeApp({
-  apiKey: '${get('VITE_FIREBASE_API_KEY')}',
-  authDomain: '${get('VITE_FIREBASE_AUTH_DOMAIN')}',
-  projectId: '${get('VITE_FIREBASE_PROJECT_ID')}',
-  storageBucket: '${get('VITE_FIREBASE_STORAGE_BUCKET')}',
-  messagingSenderId: '${get('VITE_FIREBASE_MESSAGING_SENDER_ID')}',
-  appId: '${get('VITE_FIREBASE_APP_ID')}'
-})
-
-const messaging = firebase.messaging()
-
-messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {}
-  if (!title) return
-  self.registration.showNotification(title, {
-    body: body || '',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    data: payload.data || {}
+var _apiKey = '${apiKey}';
+if (_apiKey) {
+  firebase.initializeApp({
+    apiKey: '${get('VITE_FIREBASE_API_KEY')}',
+    authDomain: '${get('VITE_FIREBASE_AUTH_DOMAIN')}',
+    projectId: '${get('VITE_FIREBASE_PROJECT_ID')}',
+    storageBucket: '${get('VITE_FIREBASE_STORAGE_BUCKET')}',
+    messagingSenderId: '${get('VITE_FIREBASE_MESSAGING_SENDER_ID')}',
+    appId: '${get('VITE_FIREBASE_APP_ID')}'
   })
-})
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
-  const url = event.notification.data?.link || '/'
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus()
-        }
-      }
-      if (clients.openWindow) return clients.openWindow(url)
+  var messaging = firebase.messaging()
+
+  messaging.onBackgroundMessage(function(payload) {
+    var title = payload.notification && payload.notification.title
+    var body = payload.notification && payload.notification.body
+    if (!title) return
+    self.registration.showNotification(title, {
+      body: body || '',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      data: payload.data || {}
     })
-  )
-})
+  })
+
+  self.addEventListener('notificationclick', function(event) {
+    event.notification.close()
+    var url = (event.notification.data && event.notification.data.link) || '/'
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
+        for (var i = 0; i < clientList.length; i++) {
+          if (clientList[i].url.includes(self.location.origin) && 'focus' in clientList[i]) {
+            return clientList[i].focus()
+          }
+        }
+        if (clients.openWindow) return clients.openWindow(url)
+      })
+    )
+  })
+}
 `
       const outPath = resolve(__dirname, 'dist', 'firebase-messaging-sw.js')
       try {
@@ -65,30 +70,35 @@ self.addEventListener('notificationclick', (event) => {
     configureServer(server) {
       const get = (key) => viteEnv[key] || process.env[key] || ''
       server.middlewares.use('/firebase-messaging-sw.js', (req, res) => {
+        const apiKey = get('VITE_FIREBASE_API_KEY')
         const sw = `importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
 
-firebase.initializeApp({
-  apiKey: '${get('VITE_FIREBASE_API_KEY')}',
-  authDomain: '${get('VITE_FIREBASE_AUTH_DOMAIN')}',
-  projectId: '${get('VITE_FIREBASE_PROJECT_ID')}',
-  storageBucket: '${get('VITE_FIREBASE_STORAGE_BUCKET')}',
-  messagingSenderId: '${get('VITE_FIREBASE_MESSAGING_SENDER_ID')}',
-  appId: '${get('VITE_FIREBASE_APP_ID')}'
-})
-
-const messaging = firebase.messaging()
-
-messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification || {}
-  if (!title) return
-  self.registration.showNotification(title, {
-    body: body || '',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    data: payload.data || {}
+var _apiKey = '${apiKey}';
+if (_apiKey) {
+  firebase.initializeApp({
+    apiKey: '${get('VITE_FIREBASE_API_KEY')}',
+    authDomain: '${get('VITE_FIREBASE_AUTH_DOMAIN')}',
+    projectId: '${get('VITE_FIREBASE_PROJECT_ID')}',
+    storageBucket: '${get('VITE_FIREBASE_STORAGE_BUCKET')}',
+    messagingSenderId: '${get('VITE_FIREBASE_MESSAGING_SENDER_ID')}',
+    appId: '${get('VITE_FIREBASE_APP_ID')}'
   })
-})
+
+  var messaging = firebase.messaging()
+
+  messaging.onBackgroundMessage(function(payload) {
+    var title = payload.notification && payload.notification.title
+    var body = payload.notification && payload.notification.body
+    if (!title) return
+    self.registration.showNotification(title, {
+      body: body || '',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      data: payload.data || {}
+    })
+  })
+}
 `
         res.setHeader('Content-Type', 'application/javascript')
         res.setHeader('Service-Worker-Allowed', '/')
