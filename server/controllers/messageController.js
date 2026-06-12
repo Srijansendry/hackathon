@@ -1,18 +1,33 @@
-import pool from '../config/db.js'
+import { supabase } from '../config/supabase.js'
 
 export async function getMessages(req, res) {
   const userId = req.user.userId
   const { receiverId } = req.params
   try {
-    const result = await pool.query(
-      `SELECT m.*, u.name as sender_name, u.role as sender_role
-      FROM messages m JOIN users u ON m.sender_id = u.user_id
-      WHERE (m.sender_id = $1 AND m.receiver_id = $2) OR (m.sender_id = $2 AND m.receiver_id = $1)
-      ORDER BY m.sent_at ASC`,
-      [userId, receiverId]
-    )
-    res.json(result.rows)
-  } catch {
+    const { data: msgs, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${userId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${userId})`)
+      .order('sent_at', { ascending: true })
+
+    if (error) throw error
+    if (!msgs || msgs.length === 0) return res.json([])
+
+    const senderIds = [...new Set(msgs.map(m => m.sender_id))]
+    const { data: users } = await supabase
+      .from('users')
+      .select('user_id, name, role')
+      .in('user_id', senderIds)
+
+    const userMap = Object.fromEntries((users || []).map(u => [u.user_id, u]))
+    const formatted = msgs.map(m => ({
+      ...m,
+      sender_name: userMap[m.sender_id]?.name || 'Unknown',
+      sender_role: userMap[m.sender_id]?.role || 'User'
+    }))
+    res.json(formatted)
+  } catch (err) {
+    console.error('getMessages error:', err)
     res.status(500).json({ error: 'Failed to fetch messages' })
   }
 }
@@ -24,18 +39,25 @@ export async function sendMessage(req, res) {
     return res.status(400).json({ error: 'Receiver and text required' })
   }
   try {
-    const result = await pool.query(
-      'INSERT INTO messages (sender_id, receiver_id, message_text) VALUES ($1, $2, $3) RETURNING *',
-      [senderId, receiverId, text]
-    )
-    const msg = result.rows[0]
-    const sender = await pool.query(
-      'SELECT name, role FROM users u WHERE u.user_id = $1',
-      [senderId]
-    )
-    msg.sender_name = sender.rows[0]?.name || 'You'
-    msg.sender_role = sender.rows[0]?.role || 'User'
-    res.status(201).json(msg)
+    const { data: msg, error } = await supabase
+      .from('messages')
+      .insert({ sender_id: senderId, receiver_id: receiverId, message_text: text })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    const { data: sender } = await supabase
+      .from('users')
+      .select('name, role')
+      .eq('user_id', senderId)
+      .single()
+
+    res.status(201).json({
+      ...msg,
+      sender_name: sender?.name || 'You',
+      sender_role: sender?.role || 'User'
+    })
   } catch (err) {
     console.error('sendMessage error:', err)
     res.status(500).json({ error: 'Failed to send message' })

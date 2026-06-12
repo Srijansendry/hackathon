@@ -1,14 +1,18 @@
-import pool from '../config/db.js'
+import { supabase } from '../config/supabase.js'
 
 export async function getPrescriptions(req, res) {
   const { patientId } = req.params
   try {
-    const result = await pool.query(
-      `SELECT * FROM prescriptions WHERE patient_id = $1 ORDER BY created_at ASC`,
-      [patientId]
-    )
-    res.json(result.rows)
-  } catch {
+    const { data, error } = await supabase
+      .from('prescriptions')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+    res.json(data)
+  } catch (err) {
+    console.error('getPrescriptions error:', err)
     res.status(500).json({ error: 'Failed to fetch prescriptions' })
   }
 }
@@ -19,12 +23,23 @@ export async function addPrescription(req, res) {
     return res.status(400).json({ error: 'patientId, name, and dosage are required' })
   }
   try {
-    const result = await pool.query(
-      `INSERT INTO prescriptions (patient_id, name, dosage, frequency, time, status) VALUES ($1, $2, $3, $4, $5, 'Pending') RETURNING *`,
-      [patientId, name, dosage, frequency || 'Once daily', time || '']
-    )
-    res.status(201).json(result.rows[0])
-  } catch {
+    const { data, error } = await supabase
+      .from('prescriptions')
+      .insert({
+        patient_id: patientId,
+        name,
+        dosage,
+        frequency: frequency || 'Once daily',
+        time: time || '',
+        status: 'Pending'
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+    res.status(201).json(data)
+  } catch (err) {
+    console.error('addPrescription error:', err)
     res.status(500).json({ error: 'Failed to add prescription' })
   }
 }
@@ -32,9 +47,15 @@ export async function addPrescription(req, res) {
 export async function deletePrescription(req, res) {
   const { id } = req.params
   try {
-    await pool.query(`DELETE FROM prescriptions WHERE prescription_id = $1`, [id])
+    const { error } = await supabase
+      .from('prescriptions')
+      .delete()
+      .eq('prescription_id', id)
+
+    if (error) throw error
     res.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error('deletePrescription error:', err)
     res.status(500).json({ error: 'Failed to delete prescription' })
   }
 }
@@ -42,17 +63,27 @@ export async function deletePrescription(req, res) {
 export async function togglePrescriptionStatus(req, res) {
   const { id } = req.params
   try {
-    const current = await pool.query(
-      `SELECT status FROM prescriptions WHERE prescription_id = $1`, [id]
-    )
-    if (current.rows.length === 0) return res.status(404).json({ error: 'Not found' })
-    const newStatus = current.rows[0].status === 'Taken' ? 'Pending' : 'Taken'
-    const result = await pool.query(
-      `UPDATE prescriptions SET status = $1 WHERE prescription_id = $2 RETURNING *`,
-      [newStatus, id]
-    )
-    res.json(result.rows[0])
-  } catch {
+    const { data: current, error: fetchErr } = await supabase
+      .from('prescriptions')
+      .select('status')
+      .eq('prescription_id', id)
+      .maybeSingle()
+
+    if (fetchErr) throw fetchErr
+    if (!current) return res.status(404).json({ error: 'Not found' })
+
+    const newStatus = current.status === 'Taken' ? 'Pending' : 'Taken'
+    const { data, error } = await supabase
+      .from('prescriptions')
+      .update({ status: newStatus })
+      .eq('prescription_id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    res.json(data)
+  } catch (err) {
+    console.error('togglePrescriptionStatus error:', err)
     res.status(500).json({ error: 'Failed to update prescription status' })
   }
 }
