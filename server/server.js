@@ -12,6 +12,7 @@ import doctorRoutes from './routes/doctorRoutes.js'
 import messageRoutes from './routes/messageRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
 import prescriptionRoutes from './routes/prescriptionRoutes.js'
+import seedRoutes from './routes/seedRoutes.js'
 
 dotenv.config()
 
@@ -42,6 +43,7 @@ app.use('/api/doctor', doctorRoutes)
 app.use('/api/messages', messageRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/prescriptions', prescriptionRoutes)
+app.use('/api/seed', seedRoutes)
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 
