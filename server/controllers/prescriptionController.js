@@ -60,6 +60,31 @@ export async function deletePrescription(req, res) {
   }
 }
 
+export async function updatePrescription(req, res) {
+  const { id } = req.params
+  const { name, dosage, frequency, time } = req.body
+  try {
+    const updates = {}
+    if (name != null) updates.name = name
+    if (dosage != null) updates.dosage = dosage
+    if (frequency != null) updates.frequency = frequency
+    if (time != null) updates.time = time
+
+    const { data, error } = await supabase
+      .from('prescriptions')
+      .update(updates)
+      .eq('prescription_id', id)
+      .select()
+      .single()
+
+    if (error) throw error
+    res.json(data)
+  } catch (err) {
+    console.error('updatePrescription error:', err)
+    res.status(500).json({ error: 'Failed to update prescription' })
+  }
+}
+
 export async function togglePrescriptionStatus(req, res) {
   const { id } = req.params
   try {

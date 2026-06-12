@@ -135,7 +135,9 @@ export default function DoctorDashboard() {
   const [stats, setStats] = useState(null)
   const [loadingPatient, setLoadingPatient] = useState(false)
   const [prescriptions, setPrescriptions] = useState([])
-  const [newPrescription, setNewPrescription] = useState({ name: '', dosage: '', frequency: '' })
+  const [newPrescription, setNewPrescription] = useState({ name: '', dosage: '', frequency: 'Once daily' })
+  const [editingPrescription, setEditingPrescription] = useState(null)
+  const [editPrescriptionForm, setEditPrescriptionForm] = useState({ name: '', dosage: '', frequency: '' })
   const [readingsFilter, setReadingsFilter] = useState('month')
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
@@ -261,6 +263,21 @@ export default function DoctorDashboard() {
     setPrescriptions(prev => prev.filter(p => (p.prescription_id || p.id) !== id))
     try {
       await api.delete(`/prescriptions/${id}`)
+    } catch {}
+  }
+
+  const handleStartEditPrescription = (pill) => {
+    setEditingPrescription(pill.prescription_id || pill.id)
+    setEditPrescriptionForm({ name: pill.name, dosage: pill.dosage, frequency: pill.frequency || 'Once daily' })
+  }
+
+  const handleSaveEditPrescription = async (e, pid) => {
+    e.preventDefault()
+    setPrescriptions(prev => prev.map(p => (p.prescription_id || p.id) === pid ? { ...p, ...editPrescriptionForm } : p))
+    setEditingPrescription(null)
+    try {
+      const { data } = await api.put(`/prescriptions/${pid}`, editPrescriptionForm)
+      setPrescriptions(prev => prev.map(p => (p.prescription_id || p.id) === pid ? data : p))
     } catch {}
   }
 
@@ -562,39 +579,89 @@ export default function DoctorDashboard() {
                         </div>
                       ) : prescriptions.map((pill) => {
                         const pid = pill.prescription_id || pill.id
+                        const isEditing = editingPrescription === pid
                         return (
-                          <div key={pid} className="checklist-item flex justify-between items-center rounded-xl px-3 py-3 bg-surface-elevated/30 hover:bg-surface-elevated border border-transparent hover:border-surface-border transition-all">
-                            <div className="flex items-center gap-2.5">
-                              <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary flex items-center justify-center text-sm shrink-0">💊</span>
-                              <div>
-                                <p className="font-semibold text-text-body">{pill.name} <span className="text-text-muted font-normal">({pill.dosage})</span></p>
-                                <p className="text-[10px] text-text-secondary">{pill.frequency}{pill.time ? ` · ${pill.time}` : ''}</p>
+                          <div key={pid} className="rounded-xl border border-surface-border bg-surface-elevated/30 transition-all">
+                            {isEditing ? (
+                              <form onSubmit={e => handleSaveEditPrescription(e, pid)} className="p-3 space-y-2">
+                                <div className="flex gap-2">
+                                  <input autoFocus type="text" required value={editPrescriptionForm.name}
+                                    onChange={e => setEditPrescriptionForm(f => ({ ...f, name: e.target.value }))}
+                                    placeholder="Medication name"
+                                    className="flex-1 px-2.5 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body" />
+                                  <input type="text" required value={editPrescriptionForm.dosage}
+                                    onChange={e => setEditPrescriptionForm(f => ({ ...f, dosage: e.target.value }))}
+                                    placeholder="Dosage"
+                                    className="w-20 px-2.5 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body" />
+                                </div>
+                                <select value={editPrescriptionForm.frequency}
+                                  onChange={e => setEditPrescriptionForm(f => ({ ...f, frequency: e.target.value }))}
+                                  className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body cursor-pointer">
+                                  {['Once daily', 'Twice daily', 'Three times daily', 'Every 8 hours', 'Every 12 hours', 'With meals', 'Before meals', 'After meals', 'As needed'].map(f => (
+                                    <option key={f}>{f}</option>
+                                  ))}
+                                </select>
+                                <div className="flex gap-2">
+                                  <button type="submit" className="flex-1 bg-primary hover:bg-primary-dark text-white py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer">Save</button>
+                                  <button type="button" onClick={() => setEditingPrescription(null)} className="flex-1 bg-surface hover:bg-surface-elevated border border-surface-border text-text-secondary py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer">Cancel</button>
+                                </div>
+                              </form>
+                            ) : (
+                              <div className="flex justify-between items-center px-3 py-3">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary flex items-center justify-center text-sm shrink-0">💊</span>
+                                  <div>
+                                    <p className="font-semibold text-text-body">{pill.name} <span className="text-text-muted font-normal">({pill.dosage})</span></p>
+                                    <p className="text-[10px] text-text-secondary">{pill.frequency}{pill.time ? ` · ${pill.time}` : ''}</p>
+                                  </div>
+                                </div>
+                                {!isCaretaker && (
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={() => handleStartEditPrescription(pill)}
+                                      className="text-primary/60 hover:text-primary hover:bg-primary-50 p-1.5 rounded-lg transition-all cursor-pointer hover:scale-110"
+                                      title="Edit">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                                      </svg>
+                                    </button>
+                                    <button onClick={() => handleDeletePrescription(pid)}
+                                      className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all cursor-pointer hover:scale-110"
+                                      title="Delete">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                            {!isCaretaker && (
-                              <button onClick={() => handleDeletePrescription(pid)}
-                                className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all cursor-pointer hover:scale-110">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166" />
-                                </svg>
-                              </button>
                             )}
                           </div>
                         )
                       })}
                     </div>
                     {!isCaretaker && (
-                      <form onSubmit={handleAddPrescription} className="mt-4 pt-4 border-t border-surface-border flex gap-2">
-                        <input type="text" required placeholder="Medication name" value={newPrescription.name}
-                          onChange={e => setNewPrescription(p => ({ ...p, name: e.target.value }))}
-                          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body placeholder-text-muted hover:border-primary/40 transition-colors" />
-                        <input type="text" required placeholder="Dosage" value={newPrescription.dosage}
-                          onChange={e => setNewPrescription(p => ({ ...p, dosage: e.target.value }))}
-                          className="w-20 px-3 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body placeholder-text-muted hover:border-primary/40 transition-colors" />
-                        <button type="submit"
-                          className="bg-primary hover:bg-primary-dark text-white px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all cursor-pointer hover:-translate-y-0.5">
-                          Add
-                        </button>
+                      <form onSubmit={handleAddPrescription} className="mt-4 pt-4 border-t border-surface-border space-y-2">
+                        <div className="flex gap-2">
+                          <input type="text" required placeholder="Medication name" value={newPrescription.name}
+                            onChange={e => setNewPrescription(p => ({ ...p, name: e.target.value }))}
+                            className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body placeholder-text-muted hover:border-primary/40 transition-colors" />
+                          <input type="text" required placeholder="Dosage" value={newPrescription.dosage}
+                            onChange={e => setNewPrescription(p => ({ ...p, dosage: e.target.value }))}
+                            className="w-20 px-3 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body placeholder-text-muted hover:border-primary/40 transition-colors" />
+                        </div>
+                        <div className="flex gap-2">
+                          <select value={newPrescription.frequency}
+                            onChange={e => setNewPrescription(p => ({ ...p, frequency: e.target.value }))}
+                            className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body cursor-pointer">
+                            {['Once daily', 'Twice daily', 'Three times daily', 'Every 8 hours', 'Every 12 hours', 'With meals', 'Before meals', 'After meals', 'As needed'].map(f => (
+                              <option key={f}>{f}</option>
+                            ))}
+                          </select>
+                          <button type="submit"
+                            className="bg-primary hover:bg-primary-dark text-white px-3.5 py-1.5 rounded-lg font-semibold text-xs transition-all cursor-pointer hover:-translate-y-0.5">
+                            Add
+                          </button>
+                        </div>
                       </form>
                     )}
                   </div>
