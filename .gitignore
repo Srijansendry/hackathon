@@ -1,0 +1,10 @@
+# Local AI Agent State & Templates
+.local/
+.agents/
+
+# OS/System Files
+.DS_Store
+**/.DS_Store
+
+# Secrets & Service Accounts
+attached_assets/*.json

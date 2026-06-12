@@ -1,28 +1,0 @@
-[client] Dependencies up to date, skipping npm install
-
-> client@0.0.0 build
-> vite build
-
-[1G[0K[36mvite v8.0.14 [32mbuilding client environment for production...[36m[39m
-[2Ktransforming (45) [2msrc/components/SendNotificationModal.jsx[0m[2Ktransforming (286) [2mnode_modules/framer-motion/dist/es/motion/features/viewpo[2Ktransforming (545) [2msrc/index.css[0m[2K[32m✓[39m 545 modules transformed.
-[2Krendering chunks (1)...[2Kcomputing gzip size...
-[2K[2mdist/[0m[32mindex.html                 [39m[2m[1m  0.48 kB[0m[0m[2m │ gzip:   0.32 kB[0m
-[2mdist/[0m[2massets/[0m[35mindex-Baz0fANR.css  [39m[2m[1m108.02 kB[0m[0m[2m │ gzip:  16.21 kB[0m
-[2mdist/[0m[2massets/[0m[36mindex-BykZcL0C.js   [39m[33m[1m842.50 kB[0m[39m[2m │ gzip: 260.76 kB[0m
-
-[2K[1G[33m[plugin builtin:vite-reporter] [33m[1m
-(!) Some chunks are larger than 500 kB after minification. Consider:
-- Using dynamic import() to code-split the application
-- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
-- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[0m[33m[39m
-[32m✓ built in 1.04s[39m
-[firebase-sw-inject] Service worker written with real config
-[1G[0K⠙[1G[0K[server] Dependencies up to date, skipping npm install
-Firebase Admin: missing credentials — push notifications disabled
-Supabase: connecting to https://gpjknujhfwxngtrcvwdj.supabase.co
-◇ injected env (0) from .env [2m// tip: ⌁ auth for agents [www.vestauth.com][0m
-◇ injected env (0) from .env [2m// tip: ⌘ custom filepath { path: '/custom/path/.env' }[0m
-◇ injected env (0) from .env [2m// tip: ⌁ auth for agents [www.vestauth.com][0m
-Server running on port 5000
-Firebase Admin not initialized — skipping push
-Firebase Admin not initialized — skipping push
