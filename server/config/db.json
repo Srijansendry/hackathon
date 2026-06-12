@@ -19,10 +19,7 @@
       "password_hash": "$2b$10$XGLJd7XBVvf784yHImK1eO.SpytHPvNrPPX6PJ.yMowVQTC6.dbwO",
       "role": "Doctor",
       "created_at": "2026-05-26T05:24:14.837Z",
-      "fcm_token": {
-        "token": null,
-        "error": "Messaging not available"
-      }
+      "fcm_token": null
     },
     {
       "user_id": "c-uuid-1",
@@ -1031,7 +1028,7 @@
       "user_id": "p-uuid-1",
       "type": "High Sugar",
       "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-12T02:11:17.567Z"
     },
     {
@@ -1039,7 +1036,7 @@
       "user_id": "p-uuid-1",
       "type": "High Sugar",
       "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-12T02:11:38.707Z"
     },
     {
@@ -1047,7 +1044,7 @@
       "user_id": "p-uuid-1",
       "type": "Emergency",
       "message": "Urgent: Contact Your Doctor: Please contact your doctor immediately regarding your recent readings.",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-12T02:11:43.233Z"
     },
     {
@@ -1055,8 +1052,40 @@
       "user_id": "p-uuid-1",
       "type": "Emergency",
       "message": "Urgent: Contact Your Doctor: Please contact your doctor immediately regarding your recent readings.",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-12T02:11:55.515Z"
+    },
+    {
+      "notification_id": "cf000f7a-b2a5-432f-8020-2f2c30af7bff",
+      "user_id": "p-uuid-1",
+      "type": "High Sugar",
+      "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
+      "is_read": true,
+      "created_at": "2026-06-12T02:14:06.124Z"
+    },
+    {
+      "notification_id": "4a48189a-825d-4bb7-8338-f389b0360ed9",
+      "user_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
+      "type": "Alert",
+      "message": "Check In: Please log your latest blood sugar reading when you get a chance.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:14:23.503Z"
+    },
+    {
+      "notification_id": "533bc603-b884-46a9-9c4f-b56688e43331",
+      "user_id": "p-uuid-1",
+      "type": "Emergency",
+      "message": "Urgent: Contact Your Doctor: Please contact your doctor immediately regarding your recent readings.",
+      "is_read": true,
+      "created_at": "2026-06-12T02:14:33.500Z"
+    },
+    {
+      "notification_id": "ca61957e-5859-4eec-9e77-d77a66ae7475",
+      "user_id": "f7c0afe7-1e19-4711-b1a8-611fcd64396f",
+      "type": "Alert",
+      "message": "Check In: Please log your latest blood sugar reading when you get a chance.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:14:38.277Z"
     }
   ],
   "connection_requests": [

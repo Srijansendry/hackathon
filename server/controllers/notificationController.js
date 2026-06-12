@@ -97,12 +97,9 @@ export async function pushToUser(req, res) {
       // Full success — DB saved + push delivered
       return res.json({ success: true, pushed: true, messageId: result.messageId })
     }
-    if (result.reason === 'no_token' || result.reason === 'invalid_token') {
-      // Partial success — saved to DB inbox but patient hasn't enabled push notifications
-      return res.json({ success: true, pushed: false, reason: result.reason })
-    }
-    // Genuine failure (FCM config error, network error, etc.)
-    res.status(500).json({ success: false, reason: result.reason, message: result.message })
+    // Any non-success from FCM still means the notification was saved to the DB inbox
+    // (no_token, invalid_token, not_initialized, send_error — all treated as inbox delivery)
+    return res.json({ success: true, pushed: false, reason: result.reason })
   } catch (err) {
     res.status(500).json({ error: 'Push failed', message: err.message })
   }
