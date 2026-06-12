@@ -108,10 +108,9 @@ function MedicationViewer({ patientName, prescriptions = [] }) {
 // ── Emergency Card ─────────────────────────────────────────────────────────────
 function EmergencyCard({ patient }) {
   const contacts = [
-    { label: 'Primary Doctor', value: 'Dr. Sarah Jenkins', icon: '🩺', phone: '+1 555-0201' },
-    { label: "Patient's Phone", value: patient?.phone || '+1 555-0101', icon: '📱', phone: patient?.phone || '+1 555-0101' },
-    { label: 'Emergency Contact', value: patient?.emergencyContact || 'Family Member', icon: '🆘', phone: '' },
-  ].filter(c => c.value)
+    patient?.phone && { label: "Patient's Phone", value: patient.phone, icon: '📱', phone: patient.phone },
+    (patient?.emergency_contact || patient?.emergencyContact) && { label: 'Emergency Contact', value: patient.emergency_contact || patient.emergencyContact, icon: '🆘', phone: null },
+  ].filter(Boolean)
 
   return (
     <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl border border-rose-200/60 p-5 shadow-soft hover-lift transition-all duration-300">

@@ -143,6 +143,9 @@ export default function DoctorDashboard() {
   const [pendingRequests, setPendingRequests] = useState([])
   const [respondingId, setRespondingId] = useState(null)
   const [notifPatient, setNotifPatient] = useState(null)
+  const [editingContacts, setEditingContacts] = useState(false)
+  const [contactForm, setContactForm] = useState({ phone: '', emergencyContact: '' })
+  const [savingContacts, setSavingContacts] = useState(false)
 
   const fetchPatients = async () => {
     try {
@@ -274,6 +277,22 @@ export default function DoctorDashboard() {
       const msg = { message_id: String(Date.now()), sender_id: user.id || 'd-uuid-1', receiver_id: selectedPatient.user_id, sender_name: 'You', sender_role: user.role, message_text: textToSend, sent_at: new Date().toISOString() }
       setMessages(prev => [...prev, msg])
     }
+  }
+
+  const handleSaveContacts = async (e) => {
+    e.preventDefault()
+    if (!selectedPatient) return
+    setSavingContacts(true)
+    try {
+      const { data } = await api.patch(`/doctor/patient/${selectedPatient.user_id}/contact`, {
+        phone: contactForm.phone,
+        emergencyContact: contactForm.emergencyContact
+      })
+      setSelectedPatient(prev => ({ ...prev, phone: data.phone, emergency_contact: data.emergencyContact }))
+      setPatients(prev => prev.map(p => p.user_id === selectedPatient.user_id ? { ...p, phone: data.phone, emergency_contact: data.emergencyContact } : p))
+      setEditingContacts(false)
+    } catch {}
+    setSavingContacts(false)
   }
 
   const filteredPatients = patients.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -408,7 +427,7 @@ export default function DoctorDashboard() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setNotifPatient(selectedPatient)}
                       className="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
@@ -418,14 +437,62 @@ export default function DoctorDashboard() {
                       </svg>
                       Send Alert
                     </button>
-                    <button className="bg-surface-card hover:bg-surface-elevated text-text-body px-4 py-2.5 border border-surface-border rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
-                      <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25" />
+                    <button
+                      onClick={() => { setEditingContacts(v => !v); setContactForm({ phone: selectedPatient.phone || '', emergencyContact: selectedPatient.emergency_contact || selectedPatient.emergencyContact || '' }) }}
+                      className="bg-surface-card hover:bg-rose-50 text-rose-600 px-4 py-2.5 border border-rose-200 rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                       </svg>
-                      Schedule Consult
+                      {editingContacts ? 'Cancel' : 'Edit Contacts'}
                     </button>
                   </div>
                 </motion.div>
+
+                {/* ── Edit Emergency Contacts Inline ── */}
+                {editingContacts && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl border border-rose-200/60 p-5 shadow-soft">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-500 flex items-center justify-center text-base">🚨</div>
+                      <div>
+                        <h3 className="text-sm font-bold text-rose-800">Edit Emergency Contacts</h3>
+                        <p className="text-[10px] text-rose-500">Updating info for {selectedPatient.name}</p>
+                      </div>
+                    </div>
+                    <form onSubmit={handleSaveContacts} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">📱 Patient Phone</label>
+                        <input
+                          type="tel"
+                          value={contactForm.phone}
+                          onChange={e => setContactForm(f => ({ ...f, phone: e.target.value }))}
+                          placeholder="+1 555-0101"
+                          className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">🆘 Emergency Contact</label>
+                        <input
+                          type="text"
+                          value={contactForm.emergencyContact}
+                          onChange={e => setContactForm(f => ({ ...f, emergencyContact: e.target.value }))}
+                          placeholder="e.g. Family Member (+1 555-...)"
+                          className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <button
+                          type="submit"
+                          disabled={savingContacts}
+                          className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50">
+                          {savingContacts ? 'Saving…' : 'Save Emergency Contacts'}
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                )}
 
                 {/* Stats + Glucose Ring */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">

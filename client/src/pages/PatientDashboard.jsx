@@ -180,42 +180,126 @@ function ActivityTracker() {
   )
 }
 
-function HealthProfileCard({ user }) {
+function EmergencyContactsCard({ user, onUpdate }) {
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ phone: user?.phone || '', emergencyContact: user?.emergencyContact || '' })
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await onUpdate({ phone: form.phone, emergencyContact: form.emergencyContact })
+      setEditing(false)
+    } catch {}
+    setSaving(false)
+  }
+
+  const contacts = [
+    { label: "My Phone", value: user?.phone, icon: '📱', phone: user?.phone },
+    { label: 'Emergency Contact', value: user?.emergencyContact, icon: '🆘', phone: null },
+  ].filter(c => c.value)
+
   const profileItems = [
     user?.bloodType && { icon: '🩸', label: 'Blood Type', value: user.bloodType },
     user?.dateOfBirth && { icon: '🎂', label: 'Date of Birth', value: new Date(user.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) },
-    user?.emergencyContact && { icon: '🆘', label: 'Emergency', value: user.emergencyContact },
-    user?.phone && { icon: '📱', label: 'Phone', value: user.phone },
   ].filter(Boolean)
 
-  if (profileItems.length === 0) return null
-
   return (
-    <div className="bg-surface-card rounded-2xl border border-surface-border p-5 shadow-soft hover-lift transition-all duration-300">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-xl bg-primary-50 text-primary flex items-center justify-center text-sm">🏥</div>
-        <div>
-          <h3 className="text-sm font-bold text-text-heading">Health Profile</h3>
-          <p className="text-[10px] text-text-muted">Registered patient details</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {profileItems.map(item => (
-          <div key={item.label} className="bg-surface-elevated/60 rounded-xl px-3 py-2.5 hover:bg-surface-elevated transition-colors">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-sm">{item.icon}</span>
-              <span className="text-[9px] font-extrabold text-text-muted uppercase tracking-wider">{item.label}</span>
+    <div className="space-y-4">
+      <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl border border-rose-200/60 p-5 shadow-soft hover-lift transition-all duration-300">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-500 flex items-center justify-center text-base">🚨</div>
+            <div>
+              <h3 className="text-sm font-bold text-rose-800">Emergency Contacts</h3>
+              <p className="text-[10px] text-rose-500">Quick-access critical info</p>
             </div>
-            <p className="text-xs font-bold text-text-heading truncate">{item.value}</p>
           </div>
-        ))}
+          <button
+            onClick={() => { setEditing(v => !v); setForm({ phone: user?.phone || '', emergencyContact: user?.emergencyContact || '' }) }}
+            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer border-rose-200 text-rose-600 hover:bg-rose-100">
+            {editing ? 'Cancel' : '✏️ Edit'}
+          </button>
+        </div>
+
+        {editing ? (
+          <form onSubmit={handleSave} className="space-y-3">
+            <div>
+              <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">📱 My Phone Number</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="+1 555-0101"
+                className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">🆘 Emergency Contact Name</label>
+              <input
+                type="text"
+                value={form.emergencyContact}
+                onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))}
+                placeholder="e.g. Family Member (+1 555-...)"
+                className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50">
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </form>
+        ) : contacts.length > 0 ? (
+          <div className="space-y-2">
+            {contacts.map((c, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+                <span className="text-base shrink-0">{c.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">{c.label}</p>
+                  <p className="text-xs font-bold text-rose-900 truncate">{c.value}</p>
+                </div>
+                {c.phone && (
+                  <a href={`tel:${c.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[11px] text-rose-400 text-center py-2">Tap ✏️ Edit to add your phone and emergency contact.</p>
+        )}
       </div>
+
+      {profileItems.length > 0 && (
+        <div className="bg-surface-card rounded-2xl border border-surface-border p-5 shadow-soft hover-lift transition-all duration-300">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-7 h-7 rounded-xl bg-primary-50 text-primary flex items-center justify-center text-sm">🏥</div>
+            <div>
+              <h3 className="text-sm font-bold text-text-heading">Health Profile</h3>
+              <p className="text-[10px] text-text-muted">Registered patient details</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {profileItems.map(item => (
+              <div key={item.label} className="bg-surface-elevated/60 rounded-xl px-3 py-2.5 hover:bg-surface-elevated transition-colors">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="text-[9px] font-extrabold text-text-muted uppercase tracking-wider">{item.label}</span>
+                </div>
+                <p className="text-xs font-bold text-text-heading truncate">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 export default function PatientDashboard() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const { pathname } = useLocation()
   const [readings, setReadings] = useState([])
   const [stats, setStats] = useState(null)
@@ -862,10 +946,8 @@ export default function PatientDashboard() {
             </div>
           )}
 
-          {/* ── Health Profile Card ── */}
-          {(user?.bloodType || user?.dateOfBirth || user?.emergencyContact || user?.phone) && (
-            <HealthProfileCard user={user} />
-          )}
+          {/* ── Emergency Contacts Card ── */}
+          <EmergencyContactsCard user={user} onUpdate={updateUser} />
 
           {/* ── Notification Settings ── */}
           <NotificationSettingsPanel />

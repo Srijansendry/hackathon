@@ -14,7 +14,7 @@ export async function getPatients(req, res) {
     const ids = links.map(p => p.patient_id)
     const { data, error } = await supabase
       .from('users')
-      .select('user_id, name, email, created_at')
+      .select('user_id, name, email, phone, blood_type, emergency_contact, created_at')
       .in('user_id', ids)
       .order('name')
 
@@ -247,5 +247,38 @@ export async function getMyRequests(req, res) {
   } catch (err) {
     console.error('getMyRequests error:', err)
     res.status(500).json({ error: 'Failed to fetch requests' })
+  }
+}
+
+export async function updatePatientContact(req, res) {
+  const { patientId } = req.params
+  const caregiverId = req.user.userId
+  const { phone, emergencyContact } = req.body
+  try {
+    const { data: link } = await supabase
+      .from('patients')
+      .select('patient_id')
+      .eq('patient_id', patientId)
+      .or(`doctor_id.eq.${caregiverId},caretaker_id.eq.${caregiverId}`)
+      .maybeSingle()
+
+    if (!link) return res.status(403).json({ error: 'Not authorized to update this patient' })
+
+    const updates = {}
+    if (phone != null) updates.phone = phone
+    if (emergencyContact != null) updates.emergency_contact = emergencyContact
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('user_id', patientId)
+      .select('user_id, name, phone, emergency_contact')
+      .single()
+
+    if (error) throw error
+    res.json({ user_id: data.user_id, name: data.name, phone: data.phone, emergencyContact: data.emergency_contact })
+  } catch (err) {
+    console.error('updatePatientContact error:', err)
+    res.status(500).json({ error: 'Failed to update patient contact' })
   }
 }
