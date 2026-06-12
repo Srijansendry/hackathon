@@ -250,15 +250,6 @@ export default function Login() {
             ))}
           </div>
 
-          {/* Stats row */}
-          <div className="mt-10 flex items-center gap-6">
-            {[{ val: '50K+', label: 'Patients' }, { val: '99.9%', label: 'Uptime' }, { val: 'HIPAA', label: 'Compliant' }].map((s, i) => (
-              <div key={s.label} className={`${i > 0 ? 'pl-6 border-l border-white/15' : ''}`}>
-                <p className="text-xl font-black text-white">{s.val}</p>
-                <p className="text-[10px] text-white/50 font-semibold uppercase tracking-wider mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="relative z-10 text-[10px] text-white/40 font-semibold tracking-widest">
