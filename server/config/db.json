@@ -7,7 +7,10 @@
       "password_hash": "$2b$10$xNFjbcWVHMPKEoC/KlYyJezIFiuOZgO5x/AhU3ltYs8LXhtiyRLm.",
       "role": "Patient",
       "created_at": "2026-05-26T05:24:14.837Z",
-      "fcm_token": null
+      "fcm_token": {
+        "token": null,
+        "error": "Messaging not available"
+      }
     },
     {
       "user_id": "d-uuid-1",
@@ -16,7 +19,10 @@
       "password_hash": "$2b$10$XGLJd7XBVvf784yHImK1eO.SpytHPvNrPPX6PJ.yMowVQTC6.dbwO",
       "role": "Doctor",
       "created_at": "2026-05-26T05:24:14.837Z",
-      "fcm_token": "eCOiRtUegsUXXAUblz-Ty-:APA91bEXIIqakvBJHQ7PlQhwJw461dyvdUMgw-YQ9iOaDo0_5sk8sGhsxgi0LGZ-dOXKez5ezOIVnB0zsQF0R5pBjTEl3-rhVZ7j6CYf4Km9wYL11HXRsYY"
+      "fcm_token": {
+        "token": null,
+        "error": "Messaging not available"
+      }
     },
     {
       "user_id": "c-uuid-1",
@@ -24,7 +30,8 @@
       "email": "caretaker@glucolyse.com",
       "password_hash": "$2b$10$w9j1hdZiJ54bSKrKUjrp0uu5F8DJ2KB6BGFt509pM2sENbd9hP28.",
       "role": "Caretaker",
-      "created_at": "2026-05-26T05:24:14.837Z"
+      "created_at": "2026-05-26T05:24:14.837Z",
+      "fcm_token": null
     },
     {
       "user_id": "591587a5-3e76-40e3-9ca7-20d2e8950e85",
@@ -984,7 +991,7 @@
       "user_id": "d-uuid-1",
       "type": "Alert",
       "message": "Glucolyse Test: Push notifications are working!",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-11T19:41:52.799Z"
     },
     {
@@ -1000,7 +1007,7 @@
       "user_id": "d-uuid-1",
       "type": "High Sugar",
       "message": "Patient Alert: High Blood Sugar: Emily Davis's before meal breakfast reading is 150 mg/dL — above safe range.",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-11T19:43:27.480Z"
     },
     {
@@ -1018,6 +1025,38 @@
       "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
       "is_read": true,
       "created_at": "2026-06-11T19:44:16.314Z"
+    },
+    {
+      "notification_id": "5355f39e-43db-43bd-b0f8-1111cff36d7f",
+      "user_id": "p-uuid-1",
+      "type": "High Sugar",
+      "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:11:17.567Z"
+    },
+    {
+      "notification_id": "2bd635e6-2b96-417b-9c82-8b1d9c0df815",
+      "user_id": "p-uuid-1",
+      "type": "High Sugar",
+      "message": "High Glucose Alert: Your blood sugar level is elevated. Please check your readings and take action if needed.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:11:38.707Z"
+    },
+    {
+      "notification_id": "0eeebf8a-e587-453d-87d3-2c5208c2f8a8",
+      "user_id": "p-uuid-1",
+      "type": "Emergency",
+      "message": "Urgent: Contact Your Doctor: Please contact your doctor immediately regarding your recent readings.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:11:43.233Z"
+    },
+    {
+      "notification_id": "435940a5-9365-4826-9fc0-a5020923ef79",
+      "user_id": "p-uuid-1",
+      "type": "Emergency",
+      "message": "Urgent: Contact Your Doctor: Please contact your doctor immediately regarding your recent readings.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:11:55.515Z"
     }
   ],
   "connection_requests": [

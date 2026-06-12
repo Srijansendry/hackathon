@@ -555,8 +555,6 @@ export default function DoctorDashboard() {
             )}
           </div>
 
-          {/* ── Notification Settings ── */}
-          <NotificationSettingsPanel />
 
         </main>
       </div>

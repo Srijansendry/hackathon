@@ -229,6 +229,7 @@ export default function PatientDashboard() {
   const [newMessage, setNewMessage] = useState('')
   const [caretakerMessages, setCaretakerMessages] = useState([])
   const [caretakerNewMessage, setCaretakerNewMessage] = useState('')
+  const [logOpen, setLogOpen] = useState(false)
   const [socket, setSocket] = useState(null)
   const [linkedDoctor, setLinkedDoctor] = useState(null)
   const [linkedCaretaker, setLinkedCaretaker] = useState(null)
@@ -540,54 +541,71 @@ export default function PatientDashboard() {
           </div>
 
           {/* ── Recent Readings Log ── */}
-          <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-base font-bold text-text-heading">Recent Readings Log</h3>
-                <p className="text-text-secondary text-xs mt-0.5">Click ✕ to remove a wrong entry</p>
+          <div className="bg-surface-card rounded-2xl border border-surface-border shadow-soft hover-lift transition-all duration-300">
+            <button
+              onClick={() => setLogOpen(o => !o)}
+              className="w-full flex items-center justify-between p-5 cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-primary-50 text-primary flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-bold text-text-heading">Recent Readings Log</h3>
+                  <p className="text-text-secondary text-[11px]">{filteredReadings.length} entries · tap to expand · click ✕ to remove a wrong entry</p>
+                </div>
               </div>
-              <span className="bg-surface-elevated text-text-muted text-[10px] font-bold px-2.5 py-1 rounded-full">{filteredReadings.length} entries</span>
-            </div>
-            {filteredReadings.length === 0 ? (
-              <p className="text-xs text-text-muted text-center py-4">No readings in this period.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-text-muted uppercase tracking-wider text-[9px]">
-                      <th className="text-left pb-2 font-bold">Date</th>
-                      <th className="text-left pb-2 font-bold">Meal</th>
-                      <th className="text-left pb-2 font-bold">Timing</th>
-                      <th className="text-left pb-2 font-bold">Level</th>
-                      <th className="text-left pb-2 font-bold">Status</th>
-                      <th className="text-right pb-2 font-bold">Remove</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-border/50">
-                    {[...filteredReadings].reverse().map(r => (
-                      <tr key={r.reading_id} className="hover:bg-surface-elevated/40 transition-colors">
-                        <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                        <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
-                        <td className="py-2 text-text-secondary">{r.timing}</td>
-                        <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
-                        <td className="py-2">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
-                            {r.status}
-                          </span>
-                        </td>
-                        <td className="py-2 text-right">
-                          <button onClick={() => handleDeleteReading(r.reading_id)}
-                            className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1 rounded-lg transition-all cursor-pointer"
-                            title="Remove this entry">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <svg className={`w-4 h-4 text-text-muted transition-transform duration-200 ${logOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {logOpen && (
+              <div className="px-5 pb-5">
+                {filteredReadings.length === 0 ? (
+                  <p className="text-xs text-text-muted text-center py-4">No readings in this period.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-text-muted uppercase tracking-wider text-[9px]">
+                          <th className="text-left pb-2 font-bold">Date</th>
+                          <th className="text-left pb-2 font-bold">Meal</th>
+                          <th className="text-left pb-2 font-bold">Timing</th>
+                          <th className="text-left pb-2 font-bold">Level</th>
+                          <th className="text-left pb-2 font-bold">Status</th>
+                          <th className="text-right pb-2 font-bold">Remove</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-surface-border/50">
+                        {[...filteredReadings].reverse().map(r => (
+                          <tr key={r.reading_id} className="hover:bg-surface-elevated/40 transition-colors">
+                            <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                            <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
+                            <td className="py-2 text-text-secondary">{r.timing}</td>
+                            <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
+                            <td className="py-2">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                {r.status}
+                              </span>
+                            </td>
+                            <td className="py-2 text-right">
+                              <button onClick={() => handleDeleteReading(r.reading_id)}
+                                className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1 rounded-lg transition-all cursor-pointer"
+                                title="Remove this entry">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
