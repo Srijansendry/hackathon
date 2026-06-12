@@ -1,0 +1,31 @@
+[client] Dependencies up to date, skipping npm install
+[1G[0K⠙[1G[0K
+> client@0.0.0 build
+> vite build
+
+[1G[0K⠙[1G[0K[36mvite v8.0.14 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming (14) [2msrc/context/AuthContext.jsx[0m[2Ktransforming (329) [2mnode_modules/motion-dom/dist/es/value/types/color/rgba.mj[2Ktransforming (545) [2msrc/index.css[0m[2K[32m✓[39m 545 modules transformed.
+[2Krendering chunks (1)...[2Kcomputing gzip size...
+[2K[2mdist/[0m[32mindex.html                 [39m[2m[1m  0.48 kB[0m[0m[2m │ gzip:   0.32 kB[0m
+[2mdist/[0m[2massets/[0m[35mindex-CLZIQsdY.css  [39m[2m[1m109.09 kB[0m[0m[2m │ gzip:  16.32 kB[0m
+[2mdist/[0m[2massets/[0m[36mindex-BwK-M4p7.js   [39m[33m[1m851.70 kB[0m[39m[2m │ gzip: 263.08 kB[0m
+
+[32m✓ built in 673ms[39m
+[2K[1G[33m[plugin builtin:vite-reporter] [33m[1m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[0m[33m[39m
+[firebase-sw-inject] Service worker written with real config
+[1G[0K⠙[1G[0K[1mnpm[22m [96mnotice[39m
+[1mnpm[22m [96mnotice[39m New [31mmajor[39m version of npm available! [31m10.8.2[39m -> [34m11.17.0[39m
+[1mnpm[22m [96mnotice[39m Changelog: [34mhttps://github.com/npm/cli/releases/tag/v11.17.0[39m
+[1mnpm[22m [96mnotice[39m To update run: [4mnpm install -g npm@11.17.0[24m
+[1mnpm[22m [96mnotice[39m
+[1G[0K⠙[1G[0K[server] Dependencies up to date, skipping npm install
+Firebase Admin: missing credentials — push notifications disabled
+Supabase: connecting to https://gpjknujhfwxngtrcvwdj.supabase.co
+◇ injected env (0) from .env [2m// tip: ◈ encrypted .env [www.dotenvx.com][0m
+◇ injected env (0) from .env [2m// tip: ◈ secrets for agents [www.dotenvx.com][0m
+◇ injected env (0) from .env [2m// tip: ⌘ override existing { override: true }[0m
+Server running on port 5000
