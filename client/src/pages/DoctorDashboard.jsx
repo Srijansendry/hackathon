@@ -133,11 +133,9 @@ export default function DoctorDashboard() {
   const [readings, setReadings] = useState([])
   const [stats, setStats] = useState(null)
   const [loadingPatient, setLoadingPatient] = useState(false)
-  const [prescriptions, setPrescriptions] = useState([
-    { id: '1', name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', status: 'Active' },
-    { id: '2', name: 'Jardiance', dosage: '10mg', frequency: 'Once daily', status: 'Active' }
-  ])
+  const [prescriptions, setPrescriptions] = useState([])
   const [newPrescription, setNewPrescription] = useState({ name: '', dosage: '', frequency: '' })
+  const [readingsFilter, setReadingsFilter] = useState('month')
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [socket, setSocket] = useState(null)
@@ -157,18 +155,21 @@ export default function DoctorDashboard() {
     }
   }
 
-  const fetchPatientDetails = async (patientId) => {
+  const fetchPatientDetails = async (patientId, filter = 'month') => {
     if (!patientId) return
     setLoadingPatient(true)
+    const filterParam = filter === 'week' ? 'weekly' : filter === 'year' ? 'yearly' : 'monthly'
     try {
-      const [readRes, statRes, msgRes] = await Promise.all([
-        api.get(`/readings/${patientId}?filter=monthly`),
+      const [readRes, statRes, msgRes, rxRes] = await Promise.all([
+        api.get(`/readings/${patientId}?filter=${filterParam}`),
         api.get(`/readings/stats/${patientId}`),
-        api.get(`/messages/${patientId}`)
+        api.get(`/messages/${patientId}`),
+        api.get(`/prescriptions/${patientId}`)
       ])
       setReadings(readRes.data)
       setStats(statRes.data)
       setMessages(msgRes.data)
+      setPrescriptions(rxRes.data)
     } catch {
       const dummyReadings = [
         { reading_id: '1', sugar_level: 145, meal_type: 'Breakfast', timing: 'After Meal', status: 'High', recorded_at: new Date(Date.now() - 86400000 * 3).toISOString() },
@@ -182,6 +183,7 @@ export default function DoctorDashboard() {
         { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: 'p-uuid-1', sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(Date.now() - 3600000 * 4).toISOString() },
         { message_id: 'm-2', sender_id: 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'Emily Davis', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
       ])
+      setPrescriptions([])
     } finally { setLoadingPatient(false) }
   }
 
@@ -208,7 +210,7 @@ export default function DoctorDashboard() {
   }, [pathname])
 
   useEffect(() => { fetchPatients() }, [])
-  useEffect(() => { if (selectedPatient) fetchPatientDetails(selectedPatient.user_id) }, [selectedPatient])
+  useEffect(() => { if (selectedPatient) fetchPatientDetails(selectedPatient.user_id, readingsFilter) }, [selectedPatient, readingsFilter])
 
   const fetchPendingRequests = async () => {
     try {
@@ -230,17 +232,24 @@ export default function DoctorDashboard() {
     if (user?.role === 'Doctor' || user?.role === 'Caretaker') fetchPendingRequests()
   }, [user])
 
-  const handleAddPrescription = (e) => {
+  const handleAddPrescription = async (e) => {
     e.preventDefault()
-    if (!newPrescription.name || !newPrescription.dosage) return
-    setPrescriptions(prev => [...prev, {
-      id: String(Date.now()), name: newPrescription.name, dosage: newPrescription.dosage,
-      frequency: newPrescription.frequency || 'Once daily', status: 'Active'
-    }])
+    if (!newPrescription.name || !newPrescription.dosage || !selectedPatient) return
+    const optimistic = { prescription_id: String(Date.now()), patient_id: selectedPatient.user_id, name: newPrescription.name, dosage: newPrescription.dosage, frequency: newPrescription.frequency || 'Once daily', status: 'Pending' }
+    setPrescriptions(prev => [...prev, optimistic])
     setNewPrescription({ name: '', dosage: '', frequency: '' })
+    try {
+      const { data } = await api.post('/prescriptions', { patientId: selectedPatient.user_id, name: optimistic.name, dosage: optimistic.dosage, frequency: optimistic.frequency })
+      setPrescriptions(prev => prev.map(p => p.prescription_id === optimistic.prescription_id ? data : p))
+    } catch {}
   }
 
-  const handleDeletePrescription = (id) => setPrescriptions(prev => prev.filter(p => p.id !== id))
+  const handleDeletePrescription = async (id) => {
+    setPrescriptions(prev => prev.filter(p => (p.prescription_id || p.id) !== id))
+    try {
+      await api.delete(`/prescriptions/${id}`)
+    } catch {}
+  }
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
@@ -419,7 +428,17 @@ export default function DoctorDashboard() {
                 {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2 bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
-                    <h3 className="text-base font-bold text-text-heading mb-1">Blood Sugar Monitor</h3>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-base font-bold text-text-heading">Blood Sugar Monitor</h3>
+                      <div className="flex gap-1 bg-surface-elevated rounded-lg p-1">
+                        {[['week', 'Week'], ['month', 'Month'], ['year', 'Year']].map(([val, label]) => (
+                          <button key={val} onClick={() => setReadingsFilter(val)}
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${readingsFilter === val ? 'bg-white dark:bg-slate-700 text-text-heading shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <p className="text-text-secondary text-xs mb-5">Historic reading levels mapping</p>
                     <SugarLineChart data={readings} />
                   </div>
@@ -447,25 +466,33 @@ export default function DoctorDashboard() {
                       {isCaretaker ? 'View daily prescription plans' : 'Add, adjust, or remove clinical prescriptions'}
                     </p>
                     <div className="flex-1 overflow-y-auto space-y-2 text-xs pr-1">
-                      {prescriptions.map((pill) => (
-                        <div key={pill.id} className="checklist-item flex justify-between items-center rounded-xl px-3 py-3 bg-surface-elevated/30 hover:bg-surface-elevated border border-transparent hover:border-surface-border transition-all">
-                          <div className="flex items-center gap-2.5">
-                            <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary flex items-center justify-center text-sm shrink-0">💊</span>
-                            <div>
-                              <p className="font-semibold text-text-body">{pill.name} <span className="text-text-muted font-normal">({pill.dosage})</span></p>
-                              <p className="text-[10px] text-text-secondary">{pill.frequency}</p>
-                            </div>
-                          </div>
-                          {!isCaretaker && (
-                            <button onClick={() => handleDeletePrescription(pill.id)}
-                              className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all cursor-pointer hover:scale-110">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166" />
-                              </svg>
-                            </button>
-                          )}
+                      {prescriptions.length === 0 ? (
+                        <div className="py-8 text-center">
+                          <div className="text-2xl mb-2">💊</div>
+                          <p className="text-text-muted text-[11px]">No prescriptions added yet.</p>
                         </div>
-                      ))}
+                      ) : prescriptions.map((pill) => {
+                        const pid = pill.prescription_id || pill.id
+                        return (
+                          <div key={pid} className="checklist-item flex justify-between items-center rounded-xl px-3 py-3 bg-surface-elevated/30 hover:bg-surface-elevated border border-transparent hover:border-surface-border transition-all">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-8 h-8 rounded-xl bg-primary-50 text-primary flex items-center justify-center text-sm shrink-0">💊</span>
+                              <div>
+                                <p className="font-semibold text-text-body">{pill.name} <span className="text-text-muted font-normal">({pill.dosage})</span></p>
+                                <p className="text-[10px] text-text-secondary">{pill.frequency}{pill.time ? ` · ${pill.time}` : ''}</p>
+                              </div>
+                            </div>
+                            {!isCaretaker && (
+                              <button onClick={() => handleDeletePrescription(pid)}
+                                className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all cursor-pointer hover:scale-110">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                     {!isCaretaker && (
                       <form onSubmit={handleAddPrescription} className="mt-4 pt-4 border-t border-surface-border flex gap-2">

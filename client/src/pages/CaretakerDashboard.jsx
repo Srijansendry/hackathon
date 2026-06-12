@@ -56,13 +56,7 @@ function GlucoseGauge({ avg, min, max }) {
 }
 
 // ── Medication Viewer (read-only) ─────────────────────────────────────────────
-function MedicationViewer({ patientName }) {
-  const meds = [
-    { name: 'Metformin', dosage: '500mg', time: 'After Breakfast', icon: '💊', status: 'given' },
-    { name: 'Jardiance', dosage: '10mg', time: 'Morning', icon: '💊', status: 'pending' },
-    { name: 'Lantus Insulin', dosage: '12 units', time: 'Bedtime', icon: '💉', status: 'pending' },
-  ]
-
+function MedicationViewer({ patientName, prescriptions = [] }) {
   return (
     <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
@@ -71,30 +65,41 @@ function MedicationViewer({ patientName }) {
           <p className="text-[10px] text-text-muted mt-0.5">Prescribed schedule for {patientName || 'patient'}</p>
         </div>
         <span className="text-[10px] font-bold bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full border border-amber-200">
-          {meds.filter(m => m.status === 'given').length}/{meds.length} Given
+          {prescriptions.filter(m => m.status === 'Taken').length}/{prescriptions.length} Taken
         </span>
       </div>
-      <div className="space-y-2.5">
-        {meds.map((med, i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-surface-elevated/50 hover:bg-surface-elevated transition-colors border border-transparent hover:border-surface-border">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${med.status === 'given' ? 'bg-emerald-50' : 'bg-primary-50'}`}>
-              {med.icon}
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-bold text-text-heading">{med.name} <span className="font-normal text-text-muted">({med.dosage})</span></p>
-              <p className="text-[10px] text-text-secondary">{med.time}</p>
-            </div>
-            {med.status === 'given' ? (
-              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                Given
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold text-amber-500 border border-amber-200 bg-amber-50 px-2 py-0.5 rounded-full">Pending</span>
-            )}
-          </div>
-        ))}
-      </div>
+      {prescriptions.length === 0 ? (
+        <div className="py-6 text-center">
+          <div className="text-2xl mb-2">💊</div>
+          <p className="text-[10px] text-text-muted">No prescriptions on file yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {prescriptions.map((med) => {
+            const pid = med.prescription_id || med.id
+            const isTaken = med.status === 'Taken'
+            return (
+              <div key={pid} className="flex items-center gap-3 p-3 rounded-xl bg-surface-elevated/50 hover:bg-surface-elevated transition-colors border border-transparent hover:border-surface-border">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${isTaken ? 'bg-emerald-50' : 'bg-primary-50'}`}>
+                  💊
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-text-heading">{med.name} <span className="font-normal text-text-muted">({med.dosage})</span></p>
+                  <p className="text-[10px] text-text-secondary">{med.frequency}{med.time ? ` · ${med.time}` : ''}</p>
+                </div>
+                {isTaken ? (
+                  <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    Taken
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-amber-500 border border-amber-200 bg-amber-50 px-2 py-0.5 rounded-full">Pending</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -189,6 +194,8 @@ export default function CaretakerDashboard() {
   const [patient, setPatient] = useState(null)
   const [readings, setReadings] = useState([])
   const [stats, setStats] = useState(null)
+  const [prescriptions, setPrescriptions] = useState([])
+  const [readingsFilter, setReadingsFilter] = useState('month')
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [socket, setSocket] = useState(null)
@@ -196,20 +203,23 @@ export default function CaretakerDashboard() {
   const [respondingId, setRespondingId] = useState(null)
   const [showNotifModal, setShowNotifModal] = useState(false)
 
-  const fetchData = async () => {
+  const fetchData = async (filter = 'month') => {
+    const filterParam = filter === 'week' ? 'weekly' : filter === 'year' ? 'yearly' : 'monthly'
     try {
       const { data: patientsData } = await api.get('/doctor/patients')
       const firstPatient = patientsData[0]
       if (firstPatient) {
         setPatient(firstPatient)
-        const [readRes, statRes, msgRes] = await Promise.all([
-          api.get(`/readings/${firstPatient.user_id}?filter=monthly`),
+        const [readRes, statRes, msgRes, rxRes] = await Promise.all([
+          api.get(`/readings/${firstPatient.user_id}?filter=${filterParam}`),
           api.get(`/readings/stats/${firstPatient.user_id}`),
-          api.get(`/messages/${firstPatient.user_id}`)
+          api.get(`/messages/${firstPatient.user_id}`),
+          api.get(`/prescriptions/${firstPatient.user_id}`)
         ])
         setReadings(readRes.data)
         setStats(statRes.data)
         setMessages(msgRes.data)
+        setPrescriptions(rxRes.data)
       }
     } catch {
       setPatient({ user_id: 'p-uuid-1', name: 'Emily Davis', email: 'patient@glucolyse.com', blood_type: 'O+', phone: '+1 555-0101' })
@@ -224,6 +234,7 @@ export default function CaretakerDashboard() {
         { message_id: 'm-1', sender_id: 'p-uuid-1', receiver_id: 'c-uuid-1', sender_name: 'Emily Davis', message_text: 'Feeling a bit tired today, blood sugar was high after lunch.', sent_at: new Date(Date.now() - 3600000 * 2).toISOString() },
         { message_id: 'm-2', sender_id: 'c-uuid-1', receiver_id: 'p-uuid-1', sender_name: 'You', message_text: "I'll prepare something lighter for dinner. Make sure to rest!", sent_at: new Date(Date.now() - 3600000).toISOString() },
       ])
+      setPrescriptions([])
     }
   }
 
@@ -261,9 +272,9 @@ export default function CaretakerDashboard() {
   }
 
   useEffect(() => {
-    fetchData()
+    fetchData(readingsFilter)
     fetchPendingRequests()
-  }, [])
+  }, [readingsFilter])
 
   useEffect(() => {
     const s = io(window.location.origin)
@@ -392,7 +403,7 @@ export default function CaretakerDashboard() {
               {/* ── Gauge + Medication + Emergency ── */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <GlucoseGauge avg={stats?.avg_level} min={stats?.min_level} max={stats?.max_level} />
-                <MedicationViewer patientName={patient?.name} />
+                <MedicationViewer patientName={patient?.name} prescriptions={prescriptions} />
                 <EmergencyCard patient={patient} />
               </div>
 
@@ -404,7 +415,17 @@ export default function CaretakerDashboard() {
 
                 {/* Chart */}
                 <div className="lg:col-span-1 bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
-                  <h3 className="text-sm font-bold text-text-heading mb-1">Sugar Trend</h3>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-sm font-bold text-text-heading">Sugar Trend</h3>
+                    <div className="flex gap-1 bg-surface-elevated rounded-lg p-0.5">
+                      {[['week', 'W'], ['month', 'M'], ['year', 'Y']].map(([val, label]) => (
+                        <button key={val} onClick={() => setReadingsFilter(val)}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${readingsFilter === val ? 'bg-white dark:bg-slate-700 text-text-heading shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <p className="text-[10px] text-text-muted mb-4">Recent glycemic readings</p>
                   <SugarLineChart data={readings} />
                 </div>

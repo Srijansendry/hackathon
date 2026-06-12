@@ -11,6 +11,7 @@ import readingRoutes from './routes/readingRoutes.js'
 import doctorRoutes from './routes/doctorRoutes.js'
 import messageRoutes from './routes/messageRoutes.js'
 import notificationRoutes from './routes/notificationRoutes.js'
+import prescriptionRoutes from './routes/prescriptionRoutes.js'
 
 dotenv.config()
 
@@ -40,6 +41,7 @@ app.use('/api/readings', readingRoutes)
 app.use('/api/doctor', doctorRoutes)
 app.use('/api/messages', messageRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/prescriptions', prescriptionRoutes)
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 

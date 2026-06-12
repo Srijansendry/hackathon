@@ -69,6 +69,20 @@ export async function getStats(req, res) {
   }
 }
 
+export async function deleteReading(req, res) {
+  const { readingId } = req.params
+  const patientId = req.user.userId
+  try {
+    await pool.query(
+      'DELETE FROM sugar_readings WHERE reading_id = $1 AND patient_id = $2',
+      [readingId, patientId]
+    )
+    res.json({ success: true })
+  } catch {
+    res.status(500).json({ error: 'Failed to delete reading' })
+  }
+}
+
 export async function getMealAverages(req, res) {
   const { patientId } = req.params
   try {

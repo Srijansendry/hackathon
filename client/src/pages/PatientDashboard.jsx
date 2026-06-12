@@ -66,9 +66,11 @@ function SmartInsights({ readings = [], stats }) {
 }
 
 function ActivityTracker() {
-  const [water, setWater] = useState(3)
+  const [water, setWater] = useState(0)
   const maxWater = 8
-  const [steps, setSteps] = useState(6230)
+  const [steps, setSteps] = useState(0)
+  const [stepsInput, setStepsInput] = useState('')
+  const [editingSteps, setEditingSteps] = useState(false)
   const maxSteps = 10000
   const [mood, setMood] = useState(null)
 
@@ -77,6 +79,14 @@ function ActivityTracker() {
     { emoji: '😐', label: 'Okay', color: 'bg-amber-500' },
     { emoji: '😔', label: 'Low', color: 'bg-rose-500' },
   ]
+
+  const handleStepsSubmit = (e) => {
+    e.preventDefault()
+    const val = parseInt(stepsInput)
+    if (!isNaN(val) && val >= 0) setSteps(Math.min(99999, val))
+    setStepsInput('')
+    setEditingSteps(false)
+  }
 
   return (
     <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
@@ -88,14 +98,20 @@ function ActivityTracker() {
         <div className="flex flex-col items-center p-3 bg-surface-elevated/40 rounded-xl border border-surface-border/50 hover:border-sky-300/50 transition-colors group">
           <p className="text-xs font-bold text-text-heading">Hydration</p>
           <p className="text-[10px] text-text-muted mt-0.5">{water} / {maxWater} cups</p>
-          <div onClick={() => water < maxWater && setWater(w => w + 1)}
+          <div
+            onClick={() => water < maxWater && setWater(w => w + 1)}
             className="w-10 h-16 border-2 border-sky-300/40 rounded-b-xl rounded-t-sm relative my-3 overflow-hidden bg-surface cursor-pointer group-hover:border-sky-400/60 transition-colors flex items-end justify-center shadow-inner">
             <div className="bg-sky-400/50 w-full transition-all duration-500 ease-out relative" style={{ height: `${(water / maxWater) * 100}%` }}>
               <div className="absolute inset-x-0 -top-1 h-2 bg-sky-300/30 animate-pulse rounded-t-full" />
             </div>
             <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-text-secondary">+ Add</span>
           </div>
-          <p className="text-[9px] text-text-muted">Tap to add</p>
+          <div className="flex gap-1">
+            <button onClick={() => setWater(w => Math.max(0, w - 1))}
+              className="text-[9px] font-bold text-rose-400 hover:text-rose-600 cursor-pointer px-1.5 py-0.5 rounded hover:bg-rose-50 transition-colors">
+              − Remove
+            </button>
+          </div>
         </div>
 
         {/* Steps */}
@@ -106,16 +122,36 @@ function ActivityTracker() {
             <svg className="w-16 h-16 transform -rotate-90">
               <circle cx="32" cy="32" r="26" className="stroke-surface-border stroke-[4] fill-none" />
               <circle cx="32" cy="32" r="26" className="stroke-emerald-400 stroke-[4] fill-none transition-all duration-700"
-                strokeDasharray={163} strokeDashoffset={163 - (163 * steps) / maxSteps} strokeLinecap="round" />
+                strokeDasharray={163} strokeDashoffset={163 - (163 * Math.min(steps, maxSteps)) / maxSteps} strokeLinecap="round" />
             </svg>
             <div className="absolute flex flex-col items-center">
-              <span className="text-[11px] font-extrabold text-text-heading">{Math.round((steps / maxSteps) * 100)}%</span>
+              <span className="text-[11px] font-extrabold text-text-heading">{Math.min(100, Math.round((steps / maxSteps) * 100))}%</span>
             </div>
           </div>
-          <button onClick={() => setSteps(s => Math.min(maxSteps, s + 1000))}
-            className="text-[9px] font-bold text-primary hover:underline cursor-pointer">
-            + 1k Steps
-          </button>
+          {editingSteps ? (
+            <form onSubmit={handleStepsSubmit} className="flex gap-1 w-full">
+              <input
+                autoFocus
+                type="number" min="0" max="99999" placeholder="e.g. 7000"
+                value={stepsInput} onChange={e => setStepsInput(e.target.value)}
+                className="flex-1 w-0 px-2 py-1 text-[10px] rounded-lg border border-emerald-300 focus:outline-none focus:border-emerald-500 bg-surface text-text-body"
+              />
+              <button type="submit" className="text-[9px] font-bold text-emerald-600 cursor-pointer px-1.5">✓</button>
+              <button type="button" onClick={() => setEditingSteps(false)} className="text-[9px] font-bold text-text-muted cursor-pointer px-1">✕</button>
+            </form>
+          ) : (
+            <div className="flex gap-1">
+              <button onClick={() => setEditingSteps(true)}
+                className="text-[9px] font-bold text-primary hover:underline cursor-pointer">
+                Set Steps
+              </button>
+              <span className="text-text-muted text-[9px]">·</span>
+              <button onClick={() => setSteps(0)}
+                className="text-[9px] font-bold text-rose-400 hover:text-rose-600 cursor-pointer hover:underline">
+                Reset
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -126,7 +162,7 @@ function ActivityTracker() {
           {moods.map(m => (
             <button
               key={m.label}
-              onClick={() => setMood(m.label)}
+              onClick={() => setMood(mood === m.label ? null : m.label)}
               className={`flex-1 py-2 rounded-xl border transition-all text-sm cursor-pointer hover:-translate-y-0.5 ${
                 mood === m.label
                   ? `${m.color} border-transparent text-white shadow-sm`
@@ -187,14 +223,12 @@ export default function PatientDashboard() {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('month')
 
-  const [prescriptions, setPrescriptions] = useState([
-    { id: '1', name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', time: 'With meals', status: 'Taken' },
-    { id: '2', name: 'Jardiance', dosage: '10mg', frequency: 'Once daily', time: 'Morning', status: 'Pending' },
-    { id: '3', name: 'Lantus Insulin', dosage: '12 units', frequency: 'Once daily', time: 'Bedtime', status: 'Pending' }
-  ])
+  const [prescriptions, setPrescriptions] = useState([])
 
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
+  const [caretakerMessages, setCaretakerMessages] = useState([])
+  const [caretakerNewMessage, setCaretakerNewMessage] = useState('')
   const [socket, setSocket] = useState(null)
   const [linkedDoctor, setLinkedDoctor] = useState(null)
   const [linkedCaretaker, setLinkedCaretaker] = useState(null)
@@ -203,7 +237,17 @@ export default function PatientDashboard() {
   const [careSearchLoading, setCareSearchLoading] = useState(false)
   const [outgoingRequests, setOutgoingRequests] = useState([])
 
-  const activeDoctorId = linkedDoctor?.user_id || 'd-uuid-1'
+  const activeDoctorId = linkedDoctor?.user_id || null
+
+  const fetchPrescriptions = async () => {
+    if (!user?.id) return
+    try {
+      const { data } = await api.get(`/prescriptions/${user.id}`)
+      setPrescriptions(data)
+    } catch {
+      setPrescriptions([])
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -212,28 +256,32 @@ export default function PatientDashboard() {
       const activeCT = docRes.data.caretaker
       setLinkedDoctor(activeDoc)
       setLinkedCaretaker(activeCT)
-      const docIdToFetch = activeDoc ? activeDoc.user_id : 'd-uuid-1'
-      const [readRes, statRes, msgRes] = await Promise.all([
-        getReadings(user.id, filter),
-        getStats(user.id),
-        api.get(`/messages/${docIdToFetch}`)
-      ])
-      setReadings(readRes.data)
-      setStats(statRes.data)
-      setMessages(msgRes.data)
+      const promises = [getReadings(user.id, filter), getStats(user.id)]
+      if (activeDoc) promises.push(api.get(`/messages/${activeDoc.user_id}`))
+      if (activeCT) promises.push(api.get(`/messages/${activeCT.user_id}`))
+      const results = await Promise.all(promises)
+      setReadings(results[0].data)
+      setStats(results[1].data)
+      if (activeDoc) setMessages(results[2]?.data || [])
+      if (activeCT) setCaretakerMessages(results[activeDoc ? 3 : 2]?.data || [])
     } catch {
       const dummyReadings = [
-        { reading_id: '1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 4).toISOString() },
-        { reading_id: '2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(Date.now() - 86400000 * 3).toISOString() },
-        { reading_id: '3', sugar_level: 130, meal_type: 'Dinner', timing: 'After Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-        { reading_id: '4', sugar_level: 72, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Low', recorded_at: new Date(Date.now() - 86400000 * 1).toISOString() },
-        { reading_id: '5', sugar_level: 118, meal_type: 'Lunch', timing: 'Before Meal', status: 'Normal', recorded_at: new Date().toISOString() }
+        { reading_id: 'sr-1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 4).toISOString() },
+        { reading_id: 'sr-2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+        { reading_id: 'sr-3', sugar_level: 130, meal_type: 'Dinner', timing: 'After Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+        { reading_id: 'sr-4', sugar_level: 72, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Low', recorded_at: new Date(Date.now() - 86400000 * 1).toISOString() },
+        { reading_id: 'sr-5', sugar_level: 118, meal_type: 'Lunch', timing: 'Before Meal', status: 'Normal', recorded_at: new Date().toISOString() }
       ]
       setReadings(dummyReadings)
       setStats({ avg_level: 117, min_level: 72, max_level: 155, total_readings: 5 })
+      setLinkedDoctor({ user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor' })
+      setLinkedCaretaker({ user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker' })
       setMessages([
-        { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: 'p-uuid-1', sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-        { message_id: 'm-2', sender_id: 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
+        { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(Date.now() - 3600000 * 4).toISOString() },
+        { message_id: 'm-2', sender_id: user?.id || 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
+      ])
+      setCaretakerMessages([
+        { message_id: 'cm-1', sender_id: 'c-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'John Miller', sender_role: 'Caretaker', message_text: "Hi! Just checking in — how are you feeling today?", sent_at: new Date(Date.now() - 3600000 * 2).toISOString() }
       ])
     }
   }
@@ -270,13 +318,16 @@ export default function PatientDashboard() {
     setSocket(s)
     if (user?.id) s.emit('register', user.id)
     s.on('newMessage', (msg) => {
-      setMessages(prev => {
-        if (prev.some(m => m.message_id === msg.message_id)) return prev
-        return [...prev, msg]
-      })
+      const isFromDoctor = linkedDoctor && (msg.sender_id === linkedDoctor.user_id || msg.receiver_id === linkedDoctor.user_id)
+      const isFromCaretaker = linkedCaretaker && (msg.sender_id === linkedCaretaker.user_id || msg.receiver_id === linkedCaretaker.user_id)
+      if (isFromCaretaker && !isFromDoctor) {
+        setCaretakerMessages(prev => prev.some(m => m.message_id === msg.message_id) ? prev : [...prev, msg])
+      } else {
+        setMessages(prev => prev.some(m => m.message_id === msg.message_id) ? prev : [...prev, msg])
+      }
     })
     return () => s.disconnect()
-  }, [user])
+  }, [user, linkedDoctor, linkedCaretaker])
 
   useEffect(() => {
     if (pathname === '/messages') {
@@ -289,7 +340,7 @@ export default function PatientDashboard() {
     }
   }, [pathname])
 
-  useEffect(() => { fetchData(); fetchMyRequests() }, [filter])
+  useEffect(() => { fetchData(); fetchMyRequests(); fetchPrescriptions() }, [filter])
 
   const handleAdd = async (e) => {
     e.preventDefault()
@@ -313,13 +364,39 @@ export default function PatientDashboard() {
     } finally { setSaving(false) }
   }
 
-  const togglePrescription = (id) => {
-    setPrescriptions(prev => prev.map(p => p.id === id ? { ...p, status: p.status === 'Taken' ? 'Pending' : 'Taken' } : p))
+  const handleDeleteReading = async (readingId) => {
+    setReadings(prev => prev.filter(r => r.reading_id !== readingId))
+    try {
+      await api.delete(`/readings/${readingId}`)
+    } catch {}
+  }
+
+  const togglePrescription = async (id) => {
+    setPrescriptions(prev => prev.map(p => (p.id || p.prescription_id) === id ? { ...p, status: p.status === 'Taken' ? 'Pending' : 'Taken' } : p))
+    try {
+      const { data } = await api.patch(`/prescriptions/${id}/toggle`)
+      setPrescriptions(prev => prev.map(p => (p.id || p.prescription_id) === id ? { ...p, status: data.status } : p))
+    } catch {}
+  }
+
+  const handleSendCaretakerMessage = async (e) => {
+    e.preventDefault()
+    if (!caretakerNewMessage.trim() || !linkedCaretaker) return
+    const textToSend = caretakerNewMessage
+    setCaretakerNewMessage('')
+    try {
+      const { data } = await api.post('/messages/send', { receiverId: linkedCaretaker.user_id, text: textToSend })
+      setCaretakerMessages(prev => [...prev, data])
+      if (socket) socket.emit('sendMessage', data)
+    } catch {
+      const msg = { message_id: String(Date.now()), sender_id: user.id, receiver_id: linkedCaretaker.user_id, sender_name: 'You', sender_role: 'Patient', message_text: textToSend, sent_at: new Date().toISOString() }
+      setCaretakerMessages(prev => [...prev, msg])
+    }
   }
 
   const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!newMessage.trim()) return
+    if (!newMessage.trim() || !activeDoctorId) return
     const textToSend = newMessage
     setNewMessage('')
     try {
@@ -462,6 +539,59 @@ export default function PatientDashboard() {
             <ActivityHeatmap data={readings} />
           </div>
 
+          {/* ── Recent Readings Log ── */}
+          <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-bold text-text-heading">Recent Readings Log</h3>
+                <p className="text-text-secondary text-xs mt-0.5">Click ✕ to remove a wrong entry</p>
+              </div>
+              <span className="bg-surface-elevated text-text-muted text-[10px] font-bold px-2.5 py-1 rounded-full">{filteredReadings.length} entries</span>
+            </div>
+            {filteredReadings.length === 0 ? (
+              <p className="text-xs text-text-muted text-center py-4">No readings in this period.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-text-muted uppercase tracking-wider text-[9px]">
+                      <th className="text-left pb-2 font-bold">Date</th>
+                      <th className="text-left pb-2 font-bold">Meal</th>
+                      <th className="text-left pb-2 font-bold">Timing</th>
+                      <th className="text-left pb-2 font-bold">Level</th>
+                      <th className="text-left pb-2 font-bold">Status</th>
+                      <th className="text-right pb-2 font-bold">Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-border/50">
+                    {[...filteredReadings].reverse().map(r => (
+                      <tr key={r.reading_id} className="hover:bg-surface-elevated/40 transition-colors">
+                        <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                        <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
+                        <td className="py-2 text-text-secondary">{r.timing}</td>
+                        <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
+                        <td className="py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="py-2 text-right">
+                          <button onClick={() => handleDeleteReading(r.reading_id)}
+                            className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1 rounded-lg transition-all cursor-pointer"
+                            title="Remove this entry">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* ── Charts ── */}
           <div id="readings-trends-section" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
@@ -502,34 +632,44 @@ export default function PatientDashboard() {
                   {prescriptions.filter(p => p.status === 'Taken').length}/{prescriptions.length} Taken
                 </span>
               </div>
-              <div className="divide-y divide-surface-border">
-                {prescriptions.map((pill) => (
-                  <div key={pill.id} className="checklist-item py-3.5 flex items-center justify-between gap-4 rounded-xl px-2">
-                    <div className="flex items-start gap-3">
-                      <button onClick={() => togglePrescription(pill.id)}
-                        className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer hover:scale-110 ${pill.status === 'Taken' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-primary'}`}>
-                        {pill.status === 'Taken' && (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                        )}
-                      </button>
-                      <div>
-                        <p className={`text-sm font-semibold transition-all ${pill.status === 'Taken' ? 'line-through text-text-muted font-normal' : 'text-text-body'}`}>
-                          {pill.name} <span className="text-xs text-text-muted font-normal">({pill.dosage})</span>
-                        </p>
-                        <p className="text-xs text-text-secondary mt-0.5">{pill.frequency} · {pill.time}</p>
+              {prescriptions.length === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="text-2xl mb-2">💊</div>
+                  <p className="text-xs text-text-muted">No prescriptions yet. Your doctor will add them here.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-surface-border">
+                  {prescriptions.map((pill) => {
+                    const pid = pill.prescription_id || pill.id
+                    return (
+                      <div key={pid} className="checklist-item py-3.5 flex items-center justify-between gap-4 rounded-xl px-2">
+                        <div className="flex items-start gap-3">
+                          <button onClick={() => togglePrescription(pid)}
+                            className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer hover:scale-110 ${pill.status === 'Taken' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 hover:border-primary'}`}>
+                            {pill.status === 'Taken' && (
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                            )}
+                          </button>
+                          <div>
+                            <p className={`text-sm font-semibold transition-all ${pill.status === 'Taken' ? 'line-through text-text-muted font-normal' : 'text-text-body'}`}>
+                              {pill.name} <span className="text-xs text-text-muted font-normal">({pill.dosage})</span>
+                            </p>
+                            <p className="text-xs text-text-secondary mt-0.5">{pill.frequency}{pill.time ? ` · ${pill.time}` : ''}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Wellness */}
             <ActivityTracker />
 
-            {/* Chat */}
+            {/* Doctor Chat */}
             <div id="chat-consultation-section" className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft flex flex-col h-[340px] lg:h-auto justify-between hover-lift transition-all duration-300">
               <div className="flex items-center gap-3 pb-3 border-b border-surface-border">
                 <div className="relative">
@@ -631,6 +771,45 @@ export default function PatientDashboard() {
               )}
             </div>
           </div>
+
+          {/* ── Caretaker Chat ── */}
+          {linkedCaretaker && (
+            <div id="caretaker-chat-section" className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300 flex flex-col">
+              <div className="flex items-center gap-3 pb-3 border-b border-surface-border mb-3">
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
+                    {linkedCaretaker.name?.charAt(0)}
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-surface-card rounded-full" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-heading">Chat with {linkedCaretaker.name}</h3>
+                  <p className="text-[11px] text-text-secondary">Direct line to your caretaker</p>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto space-y-3 text-xs pr-1 max-h-[220px] min-h-[120px]">
+                {caretakerMessages.length === 0 ? (
+                  <div className="text-center py-6 text-text-muted text-[11px]">No messages yet. Say hello!</div>
+                ) : caretakerMessages.map(msg => (
+                  <div key={msg.message_id || msg.sent_at} className={`flex flex-col ${msg.sender_id === user.id ? 'items-end' : 'items-start'}`}>
+                    <span className="text-[9px] text-text-muted font-medium mb-0.5">
+                      {msg.sender_id === user.id ? 'You' : msg.sender_name} · {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <div className={`p-3 rounded-2xl max-w-[85%] leading-relaxed ${msg.sender_id === user.id ? 'bg-teal-500 text-white rounded-tr-none' : 'bg-surface-elevated text-text-body rounded-tl-none'}`}>
+                      {msg.message_text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <form onSubmit={handleSendCaretakerMessage} className="flex gap-2 mt-4 pt-3 border-t border-surface-border">
+                <input type="text" placeholder="Message your caretaker..." value={caretakerNewMessage} onChange={e => setCaretakerNewMessage(e.target.value)}
+                  className="flex-1 px-4 py-2 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-teal-400 bg-surface text-text-body placeholder-text-muted" />
+                <button type="submit" className="bg-teal-500 hover:bg-teal-600 text-white px-3.5 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer hover:shadow-sm">
+                  Send
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* ── Health Profile Card ── */}
           {(user?.bloodType || user?.dateOfBirth || user?.emergencyContact || user?.phone) && (

@@ -29,7 +29,8 @@ let memoryDb = {
   sugar_readings: [],
   messages: [],
   notifications: [],
-  connection_requests: []
+  connection_requests: [],
+  prescriptions: []
 }
 
 const saveMemoryDb = () => {
@@ -108,7 +109,11 @@ const loadMemoryDb = () => {
         notifications: [
           { notification_id: 'n-1', user_id: 'p-uuid-1', type: 'Alert', message: 'Fasting reading was low yesterday morning.', is_read: false, created_at: new Date().toISOString() }
         ],
-        connection_requests: []
+        connection_requests: [],
+        prescriptions: [
+          { prescription_id: 'rx-1', patient_id: 'p-uuid-1', name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', time: 'With meals', status: 'Pending', created_at: new Date().toISOString() },
+          { prescription_id: 'rx-2', patient_id: 'p-uuid-1', name: 'Jardiance', dosage: '10mg', frequency: 'Once daily', time: 'Morning', status: 'Pending', created_at: new Date().toISOString() }
+        ]
       }
       saveMemoryDb()
       console.log('Seeded defaults and created server/config/db.json file')
@@ -116,6 +121,7 @@ const loadMemoryDb = () => {
   } catch (err) {
     console.error('Failed to initialize JSON database:', err)
   }
+  if (!memoryDb.prescriptions) memoryDb.prescriptions = []
 }
 
 loadMemoryDb()
@@ -543,6 +549,62 @@ const fallbackQuery = async (text, params = []) => {
       saveMemoryDb()
     }
     return { rows: [] }
+  }
+
+  // DELETE FROM sugar_readings WHERE reading_id = $1 AND patient_id = $2
+  if (sql.includes('DELETE FROM sugar_readings') && sql.includes('reading_id = $1')) {
+    if (!memoryDb.prescriptions) memoryDb.prescriptions = []
+    memoryDb.sugar_readings = memoryDb.sugar_readings.filter(r => !(r.reading_id === params[0] && r.patient_id === params[1]))
+    saveMemoryDb()
+    return { rows: [] }
+  }
+
+  // SELECT * FROM prescriptions WHERE patient_id = $1
+  if (sql.includes('FROM prescriptions') && sql.includes('patient_id = $1') && !sql.includes('INSERT') && !sql.includes('UPDATE') && !sql.includes('DELETE')) {
+    if (!memoryDb.prescriptions) memoryDb.prescriptions = []
+    const rxs = memoryDb.prescriptions.filter(r => r.patient_id === params[0])
+    return { rows: rxs }
+  }
+
+  // INSERT INTO prescriptions
+  if (sql.includes('INSERT INTO prescriptions')) {
+    if (!memoryDb.prescriptions) memoryDb.prescriptions = []
+    const newRx = {
+      prescription_id: uuidv4(),
+      patient_id: params[0],
+      name: params[1],
+      dosage: params[2],
+      frequency: params[3] || 'Once daily',
+      time: params[4] || '',
+      status: 'Pending',
+      created_at: new Date().toISOString()
+    }
+    memoryDb.prescriptions.push(newRx)
+    saveMemoryDb()
+    return { rows: [newRx] }
+  }
+
+  // DELETE FROM prescriptions WHERE prescription_id = $1
+  if (sql.includes('DELETE FROM prescriptions') && sql.includes('prescription_id = $1')) {
+    if (!memoryDb.prescriptions) memoryDb.prescriptions = []
+    memoryDb.prescriptions = memoryDb.prescriptions.filter(r => r.prescription_id !== params[0])
+    saveMemoryDb()
+    return { rows: [] }
+  }
+
+  // SELECT status FROM prescriptions WHERE prescription_id = $1
+  if (sql.includes('FROM prescriptions') && sql.includes('prescription_id = $1') && sql.includes('SELECT status')) {
+    if (!memoryDb.prescriptions) memoryDb.prescriptions = []
+    const rx = memoryDb.prescriptions.find(r => r.prescription_id === params[0])
+    return { rows: rx ? [{ status: rx.status }] : [] }
+  }
+
+  // UPDATE prescriptions SET status = $1 WHERE prescription_id = $2
+  if (sql.includes('UPDATE prescriptions SET status = $1') && sql.includes('prescription_id = $2')) {
+    if (!memoryDb.prescriptions) memoryDb.prescriptions = []
+    const rx = memoryDb.prescriptions.find(r => r.prescription_id === params[1])
+    if (rx) { rx.status = params[0]; saveMemoryDb() }
+    return { rows: rx ? [rx] : [] }
   }
 
   return { rows: [] }

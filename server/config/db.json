@@ -968,7 +968,7 @@
       "user_id": "p-uuid-1",
       "type": "Alert",
       "message": "Glucolyse Test: Push notifications are working!",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-11T19:40:37.264Z"
     },
     {
@@ -976,7 +976,7 @@
       "user_id": "p-uuid-1",
       "type": "Alert",
       "message": "Glucolyse Test: Push notifications are working!",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2026-06-11T19:41:13.079Z"
     },
     {
