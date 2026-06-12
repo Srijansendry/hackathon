@@ -284,6 +284,12 @@ export default function CaretakerDashboard() {
     s.on('newMessage', (msg) => {
       setMessages(prev => prev.some(m => m.message_id === msg.message_id) ? prev : [...prev, msg])
     })
+    s.on('newReading', (reading) => {
+      setReadings(prev => prev.some(r => r.reading_id === reading.reading_id) ? prev : [reading, ...prev])
+    })
+    s.on('newNotification', (notif) => {
+      window.dispatchEvent(new CustomEvent('glucolyse:notification', { detail: notif }))
+    })
     return () => s.disconnect()
   }, [user])
 

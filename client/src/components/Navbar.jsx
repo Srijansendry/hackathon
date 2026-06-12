@@ -74,7 +74,17 @@ export default function Navbar({ title }) {
     }
     fetchUnread()
     const interval = setInterval(fetchUnread, 30000)
-    return () => clearInterval(interval)
+
+    const handleLiveNotif = (e) => {
+      setUnread(prev => prev + 1)
+      setNotifs(prev => [e.detail, ...prev])
+    }
+    window.addEventListener('glucolyse:notification', handleLiveNotif)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('glucolyse:notification', handleLiveNotif)
+    }
   }, [])
 
   const fetchNotifications = async () => {

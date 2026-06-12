@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase.js'
 import { sendBloodSugarAlert } from '../services/notificationService.js'
+import { emitToUser } from '../socketManager.js'
 
 function calcStatus(level) {
   if (level < 80) return 'Low'
@@ -24,6 +25,20 @@ export async function addReading(req, res) {
 
     if (error) throw error
     res.status(201).json(data)
+
+    emitToUser(patientId, 'newReading', data)
+
+    supabase
+      .from('patients')
+      .select('doctor_id, caretaker_id')
+      .eq('patient_id', patientId)
+      .maybeSingle()
+      .then(({ data: pat }) => {
+        if (!pat) return
+        if (pat.doctor_id) emitToUser(pat.doctor_id, 'newReading', { ...data, patient_id: patientId })
+        if (pat.caretaker_id && pat.caretaker_id !== pat.doctor_id) emitToUser(pat.caretaker_id, 'newReading', { ...data, patient_id: patientId })
+      })
+      .catch(() => {})
 
     if (status !== 'Normal') {
       sendBloodSugarAlert(patientId, level, mealType, timing).catch(err =>

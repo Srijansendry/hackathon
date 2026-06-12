@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import './firebaseAdmin.js'
+import { setIo, emitToUser } from './socketManager.js'
 import authRoutes from './routes/authRoutes.js'
 import readingRoutes from './routes/readingRoutes.js'
 import doctorRoutes from './routes/doctorRoutes.js'
@@ -53,19 +54,19 @@ app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'))
 })
 
+setIo(io)
+
 const onlineUsers = new Map()
 
 io.on('connection', (socket) => {
   socket.on('register', (userId) => {
     onlineUsers.set(userId, socket.id)
+    socket.join(`user:${userId}`)
   })
 
   socket.on('sendMessage', (data) => {
     const rId = data.receiverId || data.receiver_id
-    const receiverSocket = onlineUsers.get(rId)
-    if (receiverSocket) {
-      io.to(receiverSocket).emit('newMessage', data)
-    }
+    emitToUser(rId, 'newMessage', data)
   })
 
   socket.on('disconnect', () => {

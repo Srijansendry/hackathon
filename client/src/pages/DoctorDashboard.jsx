@@ -198,6 +198,15 @@ export default function DoctorDashboard() {
         return [...prev, msg]
       })
     })
+    s.on('newReading', (reading) => {
+      setReadings(prev => {
+        if (prev.some(r => r.reading_id === reading.reading_id)) return prev
+        return [reading, ...prev]
+      })
+    })
+    s.on('newNotification', (notif) => {
+      window.dispatchEvent(new CustomEvent('glucolyse:notification', { detail: notif }))
+    })
     return () => s.disconnect()
   }, [user])
 

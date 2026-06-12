@@ -1,11 +1,15 @@
 import { supabase } from '../config/supabase.js'
 import { sendPushNotification } from '../firebaseAdmin.js'
+import { emitToUser } from '../socketManager.js'
 
 export async function sendNotificationToUser(userId, title, body, type = 'Alert') {
   try {
-    await supabase
+    const { data: notif } = await supabase
       .from('notifications')
       .insert({ user_id: userId, type, message: `${title}: ${body}` })
+      .select()
+      .single()
+    if (notif) emitToUser(userId, 'newNotification', notif)
   } catch (err) {
     console.error('[Notification] DB insert error:', err.message)
   }
