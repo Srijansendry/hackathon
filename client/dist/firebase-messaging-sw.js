@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js')
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyACOnfnf0Ue00Ix2Lljvkj-tKkRfE4J-TU',
+  apiKey: '',
   authDomain: 'glucolyse-6c57e.firebaseapp.com',
   projectId: 'glucolyse-6c57e',
   storageBucket: 'glucolyse-6c57e.firebasestorage.app',
