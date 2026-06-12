@@ -1,3 +1,4 @@
 - [FCM + Local DB Quirks](fcm-local-db.md) — FCM token lookup/update queries need exact SQL patterns to match fallbackQuery; "SELECT fcm_token FROM users WHERE user_id = $1" was missing a handler causing no_token errors.
 - [Notification Types](notification-types.md) — All supported types: Medicine, Sugar Check, Alert, High Sugar, Low Sugar, Appointment, Emergency — must be consistent in server notificationService, Navbar NOTIF_TYPE config, and NotificationsPage TYPE_CONFIG.
 - [Auto Blood Sugar Alerts](auto-alerts.md) — sugarController calls sendBloodSugarAlert (non-blocking) after every High/Low reading; notifies patient + their doctor + caretaker.
+- [UI Design System](ui-design-system.md) — Framer Motion installed in client/; Tailwind v4 uses @utility blocks not @layer utilities; StatCard accepts delay prop for stagger; all dashboards use motion.div with ease [0.16,1,0.3,1].

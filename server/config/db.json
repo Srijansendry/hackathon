@@ -7,10 +7,7 @@
       "password_hash": "$2b$10$xNFjbcWVHMPKEoC/KlYyJezIFiuOZgO5x/AhU3ltYs8LXhtiyRLm.",
       "role": "Patient",
       "created_at": "2026-05-26T05:24:14.837Z",
-      "fcm_token": {
-        "token": null,
-        "error": "Messaging not available"
-      }
+      "fcm_token": null
     },
     {
       "user_id": "d-uuid-1",
@@ -1094,6 +1091,14 @@
       "message": "Check In: Please log your latest blood sugar reading when you get a chance.",
       "is_read": false,
       "created_at": "2026-06-12T02:19:37.335Z"
+    },
+    {
+      "notification_id": "5e75ed06-a327-4760-b7a8-4a11141334fc",
+      "user_id": "p-uuid-1",
+      "type": "Medicine",
+      "message": "Medication Reminder: It's time to take your medication. Please don't skip your scheduled dose.",
+      "is_read": false,
+      "created_at": "2026-06-12T02:32:04.123Z"
     }
   ],
   "connection_requests": [

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import StatCard from '../components/StatCard'
@@ -274,12 +275,12 @@ export default function DoctorDashboard() {
     <div className="flex h-screen bg-surface transition-colors duration-200">
       <Sidebar role={user?.role} />
       <div className="flex-1 flex flex-col overflow-hidden min-h-0 min-w-0">
-        <Navbar title={isCaretaker ? 'Glucolyse Caregiver Dashboard' : 'Glucolyse Clinical Dashboard'} />
+        <Navbar title={isCaretaker ? 'Caregiver Dashboard' : 'Clinical Dashboard'} />
 
         <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
 
           {/* ── Patient List Panel ── */}
-          <div className="w-full md:w-72 border-r border-surface-border bg-surface-card flex flex-col shrink-0">
+          <div className="w-full md:w-72 border-r border-surface-border/60 bg-surface-card flex flex-col shrink-0 shadow-sm">
 
             {/* Pending connection requests */}
             {pendingRequests.length > 0 && (
@@ -322,10 +323,15 @@ export default function DoctorDashboard() {
 
             {/* Patient list */}
             <div className="flex-1 overflow-y-auto">
-              {filteredPatients.map(p => {
+              {filteredPatients.map((p, i) => {
                 const isSelected = selectedPatient?.user_id === p.user_id
                 return (
-                  <div key={p.user_id} onClick={() => setSelectedPatient(p)}
+                  <motion.div
+                    key={p.user_id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    onClick={() => setSelectedPatient(p)}
                     className={`patient-card flex items-center gap-3 p-4 border-b border-surface-border/30 cursor-pointer transition-all duration-200 ${
                       isSelected ? 'bg-primary-50/50 border-l-4 border-l-primary pl-4' : 'pl-4 border-l-4 border-l-transparent'
                     }`}
@@ -352,7 +358,7 @@ export default function DoctorDashboard() {
                       </div>
                       <p className="text-[10px] text-text-secondary mt-0.5 truncate">{p.email}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
               {filteredPatients.length === 0 && (
@@ -365,11 +371,16 @@ export default function DoctorDashboard() {
           </div>
 
           {/* ── Patient Details Panel ── */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-7 bg-surface transition-colors duration-200">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-surface transition-colors duration-200">
             {selectedPatient ? (
               <>
                 {/* Patient Profile Header */}
-                <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover-lift transition-all duration-300">
+                <motion.div
+                  key={selectedPatient.user_id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover-lift transition-all duration-300">
                   <div className="flex items-center gap-4">
                     <PatientAvatar name={selectedPatient.name} photoUrl={selectedPatient.photo_url || selectedPatient.photoUrl} size="lg" />
                     <div>
@@ -405,19 +416,21 @@ export default function DoctorDashboard() {
                       Schedule Consult
                     </button>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Stats + Glucose Ring */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
                   <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    <StatCard title="Avg Level (Fasting)" value={stats?.avg_level || '--'} trend={getStatusColor(stats?.avg_level)}
+                    <StatCard delay={0.06} title="Avg Level (Fasting)" value={stats?.avg_level || '--'} trend={getStatusColor(stats?.avg_level)}
                       icon={<svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" /></svg>} />
-                    <StatCard title="Minimum Reading" value={stats?.min_level || '--'} trend={getStatusColor(stats?.min_level)} color="bg-amber-500/10 text-amber-500"
+                    <StatCard delay={0.12} title="Minimum Reading" value={stats?.min_level || '--'} trend={getStatusColor(stats?.min_level)} color="bg-amber-500/10 text-amber-500"
                       icon={<svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>} />
-                    <StatCard title="Maximum Reading" value={stats?.max_level || '--'} trend={getStatusColor(stats?.max_level)} color="bg-rose-500/10 text-rose-500"
+                    <StatCard delay={0.18} title="Maximum Reading" value={stats?.max_level || '--'} trend={getStatusColor(stats?.max_level)} color="bg-rose-500/10 text-rose-500"
                       icon={<svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>} />
                   </div>
-                  <GlucoseRing avg={stats?.avg_level} min={stats?.min_level} max={stats?.max_level} />
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}>
+                    <GlucoseRing avg={stats?.avg_level} min={stats?.min_level} max={stats?.max_level} />
+                  </motion.div>
                 </div>
 
                 {/* Heatmap */}

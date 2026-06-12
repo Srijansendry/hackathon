@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import StatCard from '../components/StatCard'
@@ -432,59 +433,75 @@ export default function PatientDashboard() {
     <div className="flex h-screen bg-surface transition-colors duration-200">
       <Sidebar role="Patient" />
       <div className="flex-1 flex flex-col overflow-hidden min-h-0 min-w-0">
-        <Navbar title="Glucolyse Overview" />
+        <Navbar title="Patient Overview" />
         <NotificationPermissionBanner />
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-7">
 
           {/* ── Header ── */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+          >
             <div className="flex items-center gap-4">
-              {/* Profile photo */}
               <div className="relative shrink-0">
                 {user?.photoUrl ? (
                   <img src={user.photoUrl} alt={user.name} className="w-14 h-14 rounded-2xl object-cover ring-2 ring-primary/20 shadow-md" />
                 ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-xl font-extrabold text-white shadow-md">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-xl font-black text-white shadow-md shadow-primary/20">
                     {user?.name?.charAt(0)}
                   </div>
                 )}
-                <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-surface rounded-full" />
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-surface rounded-full shadow-sm" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-text-heading">
-                  {greeting}, {user?.name?.split(' ')[0]}
-                </h2>
-                <p className="text-text-secondary text-sm mt-0.5">Here is your daily medical update and sugar analytics.</p>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-text-secondary">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h2 className="text-2xl font-black text-text-heading tracking-tight">
+                    {greeting}, {user?.name?.split(' ')[0]}
+                  </h2>
+                  <span className="text-xl">👋</span>
+                </div>
+                <p className="text-text-secondary text-sm mt-0.5">Here is your daily health update and glucose analytics.</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
                   {linkedDoctor ? (
-                    <span className="flex items-center gap-1">🩺 <strong className="text-primary">{linkedDoctor.name}</strong></span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-full font-semibold">
+                      🩺 {linkedDoctor.name}
+                    </span>
                   ) : (
-                    <span className="text-text-muted italic">No doctor linked yet</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-surface-elevated text-text-muted px-2.5 py-1 rounded-full font-medium border border-surface-border italic">No doctor linked</span>
                   )}
                   {linkedCaretaker && (
-                    <>
-                      <span className="hidden sm:inline text-text-muted">·</span>
-                      <span className="flex items-center gap-1">🤝 <strong className="text-primary">{linkedCaretaker.name}</strong></span>
-                    </>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-semibold">
+                      🤝 {linkedCaretaker.name}
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-            <button
+            <motion.button
+              whileHover={{ translateY: -2, boxShadow: '0 10px 20px -4px rgba(72,123,164,0.3)' }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setShowForm(!showForm)}
-              className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm hover:shadow-md hover:shadow-primary/20 hover:-translate-y-0.5 cursor-pointer flex items-center gap-2 shrink-0"
+              className="bg-gradient-to-r from-primary to-primary-dark text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm cursor-pointer flex items-center gap-2 shrink-0 transition-all"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               Log Blood Sugar
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           {/* ── Add Entry Card ── */}
+          <AnimatePresence>
           {showForm && (
-            <div className="bg-surface-card rounded-2xl border border-surface-border shadow-card p-6 animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, y: -12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-surface-card rounded-2xl border border-primary/20 shadow-card p-6 ring-1 ring-primary/10">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-text-heading">Log Sugar Reading</h3>
                 <button onClick={() => setShowForm(false)} className="text-text-muted hover:text-text-secondary cursor-pointer p-1 rounded-lg hover:bg-surface-elevated transition-colors">
@@ -519,26 +536,29 @@ export default function PatientDashboard() {
                   {saving ? 'Saving...' : 'Submit Entry'}
                 </button>
               </form>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           {/* ── Smart Insights ── */}
-          <SmartInsights readings={filteredReadings} stats={filteredStats} />
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}>
+            <SmartInsights readings={filteredReadings} stats={filteredStats} />
+          </motion.div>
 
           {/* ── Stats Grid ── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <StatCard title={`Average Level (${filterLabel})`} value={filteredStats?.avg_level || '--'} trend={getStatusColor(filteredStats?.avg_level)}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <StatCard delay={0.08} title={`Average Level (${filterLabel})`} value={filteredStats?.avg_level || '--'} trend={getStatusColor(filteredStats?.avg_level)}
               icon={<svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" /></svg>} />
-            <StatCard title={`Minimum Level (${filterLabel})`} value={filteredStats?.min_level || '--'} trend="Low" color="bg-amber-500/10 text-amber-500"
+            <StatCard delay={0.14} title={`Minimum Level (${filterLabel})`} value={filteredStats?.min_level || '--'} trend="Low" color="bg-amber-500/10 text-amber-500"
               icon={<svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>} />
-            <StatCard title={`Maximum Level (${filterLabel})`} value={filteredStats?.max_level || '--'} trend="High" color="bg-rose-500/10 text-rose-500"
+            <StatCard delay={0.20} title={`Maximum Level (${filterLabel})`} value={filteredStats?.max_level || '--'} trend="High" color="bg-rose-500/10 text-rose-500"
               icon={<svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>} />
           </div>
 
           {/* ── Activity Heatmap ── */}
-          <div className="animate-fade-in">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}>
             <ActivityHeatmap data={readings} />
-          </div>
+          </motion.div>
 
           {/* ── Recent Readings Log ── */}
           <div className="bg-surface-card rounded-2xl border border-surface-border shadow-soft hover-lift transition-all duration-300">
@@ -611,8 +631,11 @@ export default function PatientDashboard() {
           </div>
 
           {/* ── Charts ── */}
-          <div id="readings-trends-section" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
+          <div id="readings-trends-section" className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-2 bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-base font-bold text-text-heading">Sugar Trends</h3>
@@ -628,16 +651,20 @@ export default function PatientDashboard() {
                 </div>
               </div>
               <SugarLineChart data={filteredReadings} />
-            </div>
-            <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300"
+            >
               <h3 className="text-base font-bold text-text-heading mb-1">Log Breakdown</h3>
               <p className="text-text-secondary text-xs mb-4">High · Low · Normal distribution ({filterLabel})</p>
               <ReadingPieChart data={filteredReadings} />
-            </div>
+            </motion.div>
           </div>
 
           {/* ── Lower Grid ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
             {/* Medications */}
             <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">

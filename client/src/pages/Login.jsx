@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { motion, AnimatePresence } from 'framer-motion'
 
 // ── 3D Floating Health Metric Cards ──────────────────────────────────────────
 const healthMetrics = [
@@ -190,10 +191,10 @@ export default function Login() {
   const roleIcon = { Patient: '🫀', Doctor: '🩺', Caretaker: '🤝' }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col lg:flex-row font-sans">
 
       {/* ── LEFT PANEL ───────────────────────────────────────────────────── */}
-      <div className="lg:w-[42%] bg-gradient-to-br from-[#2d5a87] via-[#3d6f9f] to-[#1e3d5c] text-white flex flex-col justify-between p-8 sm:p-12 relative overflow-hidden shadow-2xl min-h-[320px] lg:min-h-screen">
+      <div className="lg:w-[44%] bg-gradient-to-br from-[#1a3a5c] via-[#2d5a87] to-[#3d6f9f] text-white flex flex-col justify-between p-8 sm:p-12 relative overflow-hidden shadow-2xl min-h-[320px] lg:min-h-screen">
 
         {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:28px_28px]" />
@@ -221,23 +222,41 @@ export default function Login() {
 
         {/* Hero copy */}
         <div className="relative z-10 my-auto py-12 lg:py-20">
-          <p className="text-sky-200/70 text-xs font-bold tracking-[0.2em] uppercase mb-4">Diabetes Management Platform</p>
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1.5 mb-6 backdrop-blur-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-300 animate-pulse" />
+            <p className="text-sky-200/90 text-[10px] font-bold tracking-[0.2em] uppercase">Diabetes Management Platform</p>
+          </div>
           <h1 className="text-4xl sm:text-5xl font-light leading-tight tracking-wide mb-6">
             Your health,<br />
-            <span className="font-extrabold bg-gradient-to-r from-white via-sky-100 to-sky-300 bg-clip-text text-transparent">
+            <span className="font-black bg-gradient-to-r from-white via-sky-100 to-sky-300 bg-clip-text text-transparent">
               simplified.
             </span>
           </h1>
-          <p className="text-white/70 text-sm max-w-sm leading-relaxed">
+          <p className="text-white/65 text-sm max-w-sm leading-relaxed">
             Monitor blood sugar, track patterns, and stay connected with your entire care team — all in one secure place.
           </p>
 
           {/* Feature pills */}
           <div className="mt-8 flex flex-wrap gap-2">
-            {['Real-time monitoring', 'Secure messaging', 'Smart insights', 'AI analytics'].map(f => (
-              <span key={f} className="text-[10px] font-semibold text-white/70 bg-white/8 border border-white/15 px-3 py-1.5 rounded-full backdrop-blur-sm hover:bg-white/15 transition-colors duration-200">
-                {f}
+            {[
+              { label: 'Real-time monitoring', icon: '📊' },
+              { label: 'Secure messaging', icon: '🔒' },
+              { label: 'Smart insights', icon: '✨' },
+              { label: 'Care team sync', icon: '🤝' },
+            ].map((f, i) => (
+              <span key={f.label} className="flex items-center gap-1.5 text-[10px] font-semibold text-white/75 bg-white/8 border border-white/12 px-3 py-1.5 rounded-full backdrop-blur-sm hover:bg-white/15 hover:border-white/25 transition-all duration-200 cursor-default">
+                <span>{f.icon}</span>{f.label}
               </span>
+            ))}
+          </div>
+
+          {/* Stats row */}
+          <div className="mt-10 flex items-center gap-6">
+            {[{ val: '50K+', label: 'Patients' }, { val: '99.9%', label: 'Uptime' }, { val: 'HIPAA', label: 'Compliant' }].map((s, i) => (
+              <div key={s.label} className={`${i > 0 ? 'pl-6 border-l border-white/15' : ''}`}>
+                <p className="text-xl font-black text-white">{s.val}</p>
+                <p className="text-[10px] text-white/50 font-semibold uppercase tracking-wider mt-0.5">{s.label}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -249,43 +268,63 @@ export default function Login() {
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-white relative overflow-y-auto">
-        <div className="absolute top-10 right-10 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60" />
-        <div className="absolute bottom-10 left-10 w-48 h-48 bg-sky-50 rounded-full blur-3xl opacity-60" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-50 to-sky-50 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-slate-50 to-blue-50 rounded-full blur-3xl opacity-60 translate-y-1/3 -translate-x-1/4" />
 
-        <div className="w-full max-w-[440px] relative z-10 py-6">
+        <motion.div
+          key={isRegister ? 'register' : 'login'}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[440px] relative z-10 py-6"
+        >
 
           {/* Heading */}
           <div className="mb-7">
-            <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-1.5">
-              {isRegister ? 'Create Account' : 'Welcome back'}
+            <div className="inline-flex items-center gap-2 bg-primary-50 text-primary border border-primary/20 rounded-full px-3 py-1 mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                {isRegister ? `${activeTab} Registration` : 'Secure Sign In'}
+              </span>
+            </div>
+            <h2 className="text-[28px] font-black text-slate-800 tracking-tight mb-1.5 leading-tight">
+              {isRegister ? 'Create your account' : 'Welcome back'}
             </h2>
             <p className="text-slate-400 text-sm font-medium">
-              {isRegister ? 'Join the Glucolyse care network.' : 'Sign in to your Glucolyse account.'}
+              {isRegister ? 'Join the Glucolyse care network today.' : 'Sign in to continue to your dashboard.'}
             </p>
           </div>
 
           {/* Error */}
-          {error && (
-            <div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold animate-fade-in shadow-sm">
-              ⚠️ {error}
-            </div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold shadow-sm flex items-center gap-2.5"
+              >
+                <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center shrink-0 text-sm">⚠️</div>
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Role Tab Selector */}
-          <div className="bg-slate-100 p-1 rounded-2xl flex mb-6 border border-slate-200/50 shadow-inner gap-1">
+          <div className="bg-slate-100/80 p-1 rounded-2xl flex mb-6 border border-slate-200/60 shadow-inner gap-1">
             {['Patient', 'Doctor', 'Caretaker'].map((role) => (
               <button
                 key={role}
                 type="button"
                 onClick={() => setActiveTab(role)}
-                className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-250 cursor-pointer flex items-center justify-center gap-1.5 relative ${
                   activeTab === role
-                    ? 'bg-white text-[#3d6f9f] shadow-md border border-slate-200/30'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-white/40'
+                    ? 'bg-white text-[#3d6f9f] shadow-md border border-blue-100/50'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
                 }`}
               >
-                <span>{roleIcon[role]}</span>
-                {role}
+                <span className="text-base">{roleIcon[role]}</span>
+                <span className="hidden sm:inline">{role}</span>
               </button>
             ))}
           </div>
@@ -419,11 +458,14 @@ export default function Login() {
             )}
 
             {/* Submit */}
-            <button
+            <motion.button
+              whileHover={{ translateY: -2, boxShadow: '0 12px 24px -6px rgba(72,123,164,0.35)' }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#3d6f9f] to-[#2d5a87] hover:from-[#487ba4] hover:to-[#3d6f9f] text-white font-extrabold text-sm transition-all shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-0.5 active:scale-[0.99] disabled:opacity-50 disabled:translate-y-0 cursor-pointer mt-2"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#2d5a87] via-[#3d6f9f] to-[#487ba4] text-white font-black text-sm transition-all shadow-md shadow-blue-500/20 disabled:opacity-50 cursor-pointer mt-2 relative overflow-hidden group"
             >
+              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors duration-300" />
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -433,7 +475,7 @@ export default function Login() {
                   Please wait...
                 </span>
               ) : isRegister ? `Create ${activeTab} Account` : 'Sign In'}
-            </button>
+            </motion.button>
           </form>
 
           {/* Toggle mode */}
@@ -449,35 +491,43 @@ export default function Login() {
           </p>
 
           {/* Demo accounts */}
-          <div className="mt-6 bg-gradient-to-br from-blue-50 to-sky-50/50 rounded-2xl p-5 border border-blue-100/60 shadow-sm hover:shadow-md transition-all duration-300">
-            <h4 className="text-[10px] font-extrabold text-[#3d6f9f] tracking-widest uppercase mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-              Demo Accounts — tap to auto-fill
+          <div className="mt-6 bg-gradient-to-br from-blue-50/80 to-sky-50/40 rounded-2xl p-4 border border-blue-100/80 shadow-sm">
+            <h4 className="text-[10px] font-black text-[#3d6f9f] tracking-widest uppercase mb-3 flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              </span>
+              Demo Accounts — click to auto-fill
             </h4>
-            <div className="space-y-2 text-xs">
+            <div className="space-y-1.5 text-xs">
               {[
-                { role: 'Patient', email: 'patient@glucolyse.com', pass: 'Patient123', icon: '🫀' },
-                { role: 'Doctor', email: 'doctor@glucolyse.com', pass: 'Doctor123', icon: '🩺' },
-                { role: 'Caretaker', email: 'caretaker@glucolyse.com', pass: 'Caretaker123', icon: '🤝' },
+                { role: 'Patient', email: 'patient@glucolyse.com', pass: 'Patient123', icon: '🫀', color: 'hover:border-rose-200 hover:bg-rose-50/50' },
+                { role: 'Doctor', email: 'doctor@glucolyse.com', pass: 'Doctor123', icon: '🩺', color: 'hover:border-blue-200 hover:bg-blue-50/50' },
+                { role: 'Caretaker', email: 'caretaker@glucolyse.com', pass: 'Caretaker123', icon: '🤝', color: 'hover:border-emerald-200 hover:bg-emerald-50/50' },
               ].map(d => (
-                <div
+                <motion.div
                   key={d.role}
+                  whileHover={{ x: 3 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleFillDemo(d.email, d.pass, d.role)}
-                  className="flex items-center justify-between hover:bg-white hover:shadow-sm p-2.5 rounded-xl transition-all cursor-pointer group border border-transparent hover:border-blue-100"
+                  className={`flex items-center justify-between bg-white/70 hover:shadow-sm p-2.5 rounded-xl transition-all cursor-pointer group border border-transparent ${d.color}`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">{d.icon}</span>
-                    <span className="font-extrabold text-slate-700 group-hover:text-[#487ba4] transition-colors">{d.role}</span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-lg">{d.icon}</span>
+                    <div>
+                      <span className="font-bold text-slate-700 group-hover:text-[#487ba4] transition-colors">{d.role}</span>
+                      <p className="text-[9px] text-slate-400 font-mono">{d.email}</p>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400 group-hover:text-slate-600 transition-colors">
-                    ···{d.pass.slice(-4)}
+                  <span className="text-[10px] font-semibold text-slate-400 group-hover:text-primary transition-colors">
+                    Try →
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
 
-        </div>
+        </motion.div>
       </div>
     </div>
   )
