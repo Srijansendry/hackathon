@@ -3,19 +3,23 @@ import { supabase } from '../config/supabase.js'
 export async function getPatients(req, res) {
   const userId = req.user.userId
   try {
-    const { data: links, error: linkErr } = await supabase
-      .from('patients')
-      .select('patient_id')
-      .or(`doctor_id.eq.${userId},caretaker_id.eq.${userId}`)
+    let allPatientIds = []
 
-    if (linkErr) throw linkErr
-    if (!links || links.length === 0) return res.json([])
+    const { data: docLinks } = await supabase.from('patient_doctor_links').select('patient_id').eq('doctor_id', userId)
+    const { data: ctLinks }  = await supabase.from('patient_caretaker_links').select('patient_id').eq('caretaker_id', userId)
+    if (docLinks) allPatientIds.push(...docLinks.map(l => l.patient_id))
+    if (ctLinks)  allPatientIds.push(...ctLinks.map(l => l.patient_id))
 
-    const ids = links.map(p => p.patient_id)
+    const { data: oldLinks } = await supabase.from('patients').select('patient_id').or(`doctor_id.eq.${userId},caretaker_id.eq.${userId}`)
+    if (oldLinks) allPatientIds.push(...oldLinks.map(l => l.patient_id))
+
+    allPatientIds = [...new Set(allPatientIds)]
+    if (allPatientIds.length === 0) return res.json([])
+
     const { data, error } = await supabase
       .from('users')
       .select('user_id, name, email, phone, blood_type, emergency_contact, created_at')
-      .in('user_id', ids)
+      .in('user_id', allPatientIds)
       .order('name')
 
     if (error) throw error
@@ -48,35 +52,30 @@ export async function getPatientById(req, res) {
 export async function getMyDoctor(req, res) {
   const patientId = req.user.userId
   try {
-    const { data: pat, error: patErr } = await supabase
-      .from('patients')
-      .select('doctor_id, caretaker_id')
-      .eq('patient_id', patientId)
-      .maybeSingle()
+    let doctorIds = []
+    let caretakerIds = []
 
-    if (patErr) throw patErr
+    const { data: docLinks } = await supabase.from('patient_doctor_links').select('doctor_id').eq('patient_id', patientId)
+    const { data: ctLinks }  = await supabase.from('patient_caretaker_links').select('caretaker_id').eq('patient_id', patientId)
+    if (docLinks) doctorIds    = docLinks.map(l => l.doctor_id)
+    if (ctLinks)  caretakerIds = ctLinks.map(l => l.caretaker_id)
 
-    let doctor = null
-    let caretaker = null
+    const { data: pat } = await supabase.from('patients').select('doctor_id, caretaker_id').eq('patient_id', patientId).maybeSingle()
+    if (pat?.doctor_id   && !doctorIds.includes(pat.doctor_id))      doctorIds.push(pat.doctor_id)
+    if (pat?.caretaker_id && !caretakerIds.includes(pat.caretaker_id)) caretakerIds.push(pat.caretaker_id)
 
-    if (pat?.doctor_id) {
-      const { data } = await supabase
-        .from('users')
-        .select('user_id, name, email, role')
-        .eq('user_id', pat.doctor_id)
-        .maybeSingle()
-      doctor = data || null
+    let doctors = []
+    let caretakers = []
+    if (doctorIds.length > 0) {
+      const { data } = await supabase.from('users').select('user_id, name, email, role').in('user_id', doctorIds)
+      doctors = data || []
     }
-    if (pat?.caretaker_id) {
-      const { data } = await supabase
-        .from('users')
-        .select('user_id, name, email, role')
-        .eq('user_id', pat.caretaker_id)
-        .maybeSingle()
-      caretaker = data || null
+    if (caretakerIds.length > 0) {
+      const { data } = await supabase.from('users').select('user_id, name, email, role').in('user_id', caretakerIds)
+      caretakers = data || []
     }
 
-    res.json({ doctor, caretaker })
+    res.json({ doctor: doctors[0] || null, caretaker: caretakers[0] || null, doctors, caretakers })
   } catch (err) {
     console.error('getMyDoctor error:', err)
     res.status(500).json({ error: 'Failed to fetch care team' })
@@ -179,19 +178,18 @@ export async function respondToRequest(req, res) {
     if (!cr) return res.status(404).json({ error: 'Request not found' })
 
     if (action === 'accept') {
-      const { data: roleRow } = await supabase
-        .from('users')
-        .select('role')
-        .eq('user_id', userId)
-        .single()
+      const { data: roleRow } = await supabase.from('users').select('role').eq('user_id', userId).single()
       const role = roleRow?.role
 
-      const { data: patRow } = await supabase
-        .from('patients')
-        .select('patient_id')
-        .eq('patient_id', cr.from_id)
-        .maybeSingle()
+      try {
+        if (role === 'Doctor') {
+          await supabase.from('patient_doctor_links').upsert({ patient_id: cr.from_id, doctor_id: userId }, { onConflict: 'patient_id,doctor_id' })
+        } else if (role === 'Caretaker') {
+          await supabase.from('patient_caretaker_links').upsert({ patient_id: cr.from_id, caretaker_id: userId }, { onConflict: 'patient_id,caretaker_id' })
+        }
+      } catch {}
 
+      const { data: patRow } = await supabase.from('patients').select('patient_id').eq('patient_id', cr.from_id).maybeSingle()
       if (!patRow) {
         await supabase.from('patients').insert({
           patient_id: cr.from_id,
@@ -250,19 +248,45 @@ export async function getMyRequests(req, res) {
   }
 }
 
+export async function unlinkMember(req, res) {
+  const patientId = req.user.userId
+  const { memberId, memberRole } = req.body
+  if (!memberId || !memberRole) return res.status(400).json({ error: 'memberId and memberRole required' })
+  try {
+    if (memberRole === 'Doctor') {
+      await supabase.from('patient_doctor_links').delete().eq('patient_id', patientId).eq('doctor_id', memberId)
+      await supabase.from('patients').update({ doctor_id: null }).eq('patient_id', patientId).eq('doctor_id', memberId)
+    } else if (memberRole === 'Caretaker') {
+      await supabase.from('patient_caretaker_links').delete().eq('patient_id', patientId).eq('caretaker_id', memberId)
+      await supabase.from('patients').update({ caretaker_id: null }).eq('patient_id', patientId).eq('caretaker_id', memberId)
+    }
+    res.json({ success: true })
+  } catch (err) {
+    console.error('unlinkMember error:', err)
+    res.status(500).json({ error: 'Failed to unlink member' })
+  }
+}
+
 export async function updatePatientContact(req, res) {
   const { patientId } = req.params
   const caregiverId = req.user.userId
   const { phone, emergencyContact } = req.body
   try {
-    const { data: link } = await supabase
+    const { data: oldLink } = await supabase
       .from('patients')
       .select('patient_id')
       .eq('patient_id', patientId)
       .or(`doctor_id.eq.${caregiverId},caretaker_id.eq.${caregiverId}`)
       .maybeSingle()
 
-    if (!link) return res.status(403).json({ error: 'Not authorized to update this patient' })
+    let authorized = !!oldLink
+    if (!authorized) {
+      const { data: dl } = await supabase.from('patient_doctor_links').select('patient_id').eq('patient_id', patientId).eq('doctor_id', caregiverId).maybeSingle()
+      const { data: cl } = await supabase.from('patient_caretaker_links').select('patient_id').eq('patient_id', patientId).eq('caretaker_id', caregiverId).maybeSingle()
+      authorized = !!(dl || cl)
+    }
+
+    if (!authorized) return res.status(403).json({ error: 'Not authorized to update this patient' })
 
     const updates = {}
     if (phone != null) updates.phone = phone

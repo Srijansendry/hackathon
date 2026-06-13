@@ -364,13 +364,16 @@ export default function PatientDashboard() {
   const [caretakerNewMessage, setCaretakerNewMessage] = useState('')
   const [logOpen, setLogOpen] = useState(false)
   const [socket, setSocket] = useState(null)
-  const [linkedDoctor, setLinkedDoctor] = useState(null)
-  const [linkedCaretaker, setLinkedCaretaker] = useState(null)
+  const [linkedDoctors, setLinkedDoctors] = useState([])
+  const [linkedCaretakers, setLinkedCaretakers] = useState([])
+  const [addingToTeam, setAddingToTeam] = useState(false)
   const [careSearch, setCareSearch] = useState('')
   const [careResults, setCareResults] = useState([])
   const [careSearchLoading, setCareSearchLoading] = useState(false)
   const [outgoingRequests, setOutgoingRequests] = useState([])
 
+  const linkedDoctor = linkedDoctors[0] || null
+  const linkedCaretaker = linkedCaretakers[0] || null
   const activeDoctorId = linkedDoctor?.user_id || null
 
   const fetchPrescriptions = async () => {
@@ -388,8 +391,8 @@ export default function PatientDashboard() {
       const docRes = await api.get('/doctor/my-doctor')
       const activeDoc = docRes.data.doctor
       const activeCT = docRes.data.caretaker
-      setLinkedDoctor(activeDoc)
-      setLinkedCaretaker(activeCT)
+      setLinkedDoctors(docRes.data.doctors || (activeDoc ? [activeDoc] : []))
+      setLinkedCaretakers(docRes.data.caretakers || (activeCT ? [activeCT] : []))
       const promises = [getReadings(user.id, filter), getStats(user.id)]
       if (activeDoc) promises.push(api.get(`/messages/${activeDoc.user_id}`))
       if (activeCT) promises.push(api.get(`/messages/${activeCT.user_id}`))
@@ -408,8 +411,8 @@ export default function PatientDashboard() {
       ]
       setReadings(dummyReadings)
       setStats({ avg_level: 117, min_level: 72, max_level: 155, total_readings: 5 })
-      setLinkedDoctor({ user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor' })
-      setLinkedCaretaker({ user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker' })
+      setLinkedDoctors([{ user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor', email: 'doctor@glucolyse.com' }])
+      setLinkedCaretakers([{ user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker', email: 'caretaker@glucolyse.com' }])
       setMessages([
         { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(Date.now() - 3600000 * 4).toISOString() },
         { message_id: 'm-2', sender_id: user?.id || 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
@@ -444,6 +447,14 @@ export default function PatientDashboard() {
       await fetchMyRequests()
       setCareResults([])
       setCareSearch('')
+    } catch {}
+  }
+
+  const handleUnlink = async (memberId, memberRole) => {
+    try {
+      await api.post('/doctor/unlink', { memberId, memberRole })
+      if (memberRole === 'Doctor') setLinkedDoctors(prev => prev.filter(d => d.user_id !== memberId))
+      else setLinkedCaretakers(prev => prev.filter(c => c.user_id !== memberId))
     } catch {}
   }
 
@@ -602,18 +613,22 @@ export default function PatientDashboard() {
                   <span className="text-xl">👋</span>
                 </div>
                 <p className="text-text-secondary text-sm mt-0.5">Here is your daily health update and glucose analytics.</p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                  {linkedDoctor ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-full font-semibold">
-                      🩺 {linkedDoctor.name}
-                    </span>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2">
+                  {linkedDoctors.length === 0 && linkedCaretakers.length === 0 ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-surface-elevated text-text-muted px-2.5 py-1 rounded-full font-medium border border-surface-border italic">No care team linked</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-surface-elevated text-text-muted px-2.5 py-1 rounded-full font-medium border border-surface-border italic">No doctor linked</span>
-                  )}
-                  {linkedCaretaker && (
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-semibold">
-                      🤝 {linkedCaretaker.name}
-                    </span>
+                    <>
+                      {linkedDoctors.map(d => (
+                        <span key={d.user_id} className="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-full font-semibold">
+                          🩺 {d.name}
+                        </span>
+                      ))}
+                      {linkedCaretakers.map(c => (
+                        <span key={c.user_id} className="inline-flex items-center gap-1.5 text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-full font-semibold">
+                          🤝 {c.name}
+                        </span>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
@@ -852,31 +867,64 @@ export default function PatientDashboard() {
             {/* Wellness */}
             <ActivityTracker />
 
-            {/* Doctor Chat */}
-            <div id="chat-consultation-section" className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft flex flex-col h-[340px] lg:h-auto justify-between hover-lift transition-all duration-300">
-              <div className="flex items-center gap-3 pb-3 border-b border-surface-border">
-                <div className="relative">
-                  {linkedDoctor?.photoUrl ? (
-                    <img src={linkedDoctor.photoUrl} alt={linkedDoctor.name} className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold text-sm">
-                      {linkedDoctor ? linkedDoctor.name?.charAt(0) : 'Dr'}
-                    </div>
-                  )}
-                  {linkedDoctor && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 border-2 border-surface-card rounded-full" />}
+            {/* Care Team Management */}
+            <div id="chat-consultation-section" className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
+
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-surface-border mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-sm shrink-0">👥</div>
+                  <div>
+                    <h3 className="text-sm font-bold text-text-heading">Care Team</h3>
+                    <p className="text-[10px] text-text-secondary">{linkedDoctors.length + linkedCaretakers.length} member{linkedDoctors.length + linkedCaretakers.length !== 1 ? 's' : ''} linked</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-text-heading">Care Team Advice</h3>
-                  <p className="text-[11px] text-text-secondary">
-                    {linkedDoctor ? `Direct channel to ${linkedDoctor.name}` : 'Connect with your doctor'}
-                  </p>
-                </div>
+                <button
+                  onClick={() => { setAddingToTeam(v => !v); setCareResults([]); setCareSearch('') }}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                    addingToTeam ? 'border-text-muted text-text-muted hover:bg-surface-elevated' : 'border-primary text-primary hover:bg-primary/5'
+                  }`}>
+                  {addingToTeam ? '✕ Cancel' : '+ Add Member'}
+                </button>
               </div>
 
-              {!linkedDoctor ? (
-                <div className="flex-1 flex flex-col justify-center py-4 gap-4">
+              {/* Linked care team members */}
+              {(linkedDoctors.length > 0 || linkedCaretakers.length > 0) && !addingToTeam && (
+                <div className="space-y-2 mb-4">
+                  {linkedDoctors.map(d => (
+                    <div key={d.user_id} className="flex items-center gap-3 bg-blue-50/70 dark:bg-blue-900/10 rounded-xl px-3 py-2.5 border border-blue-100 dark:border-blue-900/30">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">{d.name?.charAt(0)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-text-heading truncate">{d.name}</p>
+                        <p className="text-[10px] text-blue-600 font-medium truncate">🩺 Doctor · {d.email}</p>
+                      </div>
+                      <button onClick={() => handleUnlink(d.user_id, 'Doctor')}
+                        className="text-[10px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition-all cursor-pointer font-semibold shrink-0 border border-transparent hover:border-rose-100">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  {linkedCaretakers.map(c => (
+                    <div key={c.user_id} className="flex items-center gap-3 bg-emerald-50/70 dark:bg-emerald-900/10 rounded-xl px-3 py-2.5 border border-emerald-100 dark:border-emerald-900/30">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">{c.name?.charAt(0)}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-text-heading truncate">{c.name}</p>
+                        <p className="text-[10px] text-emerald-600 font-medium truncate">🤝 Caretaker · {c.email}</p>
+                      </div>
+                      <button onClick={() => handleUnlink(c.user_id, 'Caretaker')}
+                        className="text-[10px] text-rose-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition-all cursor-pointer font-semibold shrink-0 border border-transparent hover:border-rose-100">
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add member / search form */}
+              {(addingToTeam || (linkedDoctors.length === 0 && linkedCaretakers.length === 0)) && (
+                <div className="space-y-3 mb-4">
                   {outgoingRequests.filter(r => r.status === 'pending').length > 0 && (
-                    <div className="mx-1 space-y-2">
+                    <div className="space-y-2">
                       <p className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">Pending Requests</p>
                       {outgoingRequests.filter(r => r.status === 'pending').map(r => (
                         <div key={r.request_id} className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-2.5">
@@ -890,17 +938,19 @@ export default function PatientDashboard() {
                       ))}
                     </div>
                   )}
-                  <div className="text-center mb-1">
-                    <div className="w-10 h-10 rounded-full bg-primary-50 text-primary flex items-center justify-center mx-auto mb-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+                  {linkedDoctors.length === 0 && linkedCaretakers.length === 0 && outgoingRequests.filter(r => r.status === 'pending').length === 0 && (
+                    <div className="text-center py-2">
+                      <div className="w-10 h-10 rounded-full bg-primary-50 text-primary flex items-center justify-center mx-auto mb-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-xs font-bold text-text-heading">Find Your Care Team</h4>
+                      <p className="text-[10px] text-text-secondary mt-0.5">Search by name or email</p>
                     </div>
-                    <h4 className="text-xs font-bold text-text-heading">Find Your Care Team</h4>
-                    <p className="text-[10px] text-text-secondary mt-0.5">Search by doctor or caretaker</p>
-                  </div>
+                  )}
                   <form onSubmit={handleCareSearch} className="flex gap-2">
-                    <input type="text" placeholder="Name or email..." value={careSearch} onChange={e => setCareSearch(e.target.value)}
+                    <input type="text" placeholder="Search doctor or caretaker..." value={careSearch} onChange={e => setCareSearch(e.target.value)}
                       className="flex-1 px-3 py-2 text-xs rounded-lg border border-surface-border focus:outline-none focus:border-primary bg-surface text-text-body placeholder-text-muted" />
                     <button type="submit" disabled={careSearchLoading}
                       className="px-3 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 shrink-0">
@@ -908,9 +958,10 @@ export default function PatientDashboard() {
                     </button>
                   </form>
                   {careResults.length > 0 && (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <div className="space-y-2 max-h-44 overflow-y-auto">
                       {careResults.map(prof => {
                         const alreadySent = outgoingRequests.some(r => r.to_id === prof.user_id && r.status === 'pending')
+                        const alreadyLinked = [...linkedDoctors, ...linkedCaretakers].some(m => m.user_id === prof.user_id)
                         return (
                           <div key={prof.user_id} className="flex items-center gap-2 bg-surface-elevated rounded-xl px-3 py-2.5 border border-surface-border hover:border-primary/30 transition-colors">
                             <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">{prof.name?.charAt(0)}</div>
@@ -919,9 +970,9 @@ export default function PatientDashboard() {
                               <p className="text-[9px] text-text-secondary truncate">{prof.email}</p>
                             </div>
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${prof.role === 'Doctor' ? 'bg-blue-500/10 text-blue-600' : 'bg-purple-500/10 text-purple-600'}`}>{prof.role}</span>
-                            <button onClick={() => handleSendRequest(prof.user_id)} disabled={alreadySent}
+                            <button onClick={() => handleSendRequest(prof.user_id)} disabled={alreadySent || alreadyLinked}
                               className="ml-1 px-2.5 py-1 bg-primary hover:bg-primary-dark text-white rounded-lg text-[10px] font-bold transition-colors cursor-pointer disabled:opacity-40 shrink-0">
-                              {alreadySent ? '✓ Sent' : 'Request'}
+                              {alreadyLinked ? '✓ Linked' : alreadySent ? '✓ Sent' : 'Request'}
                             </button>
                           </div>
                         )
@@ -929,9 +980,13 @@ export default function PatientDashboard() {
                     </div>
                   )}
                 </div>
-              ) : (
-                <>
-                  <div className="flex-1 overflow-y-auto space-y-3 my-4 pr-1 text-xs max-h-[170px]">
+              )}
+
+              {/* Doctor chat — shown when doctor linked and not in add mode */}
+              {linkedDoctor && !addingToTeam && (
+                <div className="border-t border-surface-border pt-3">
+                  <p className="text-[9px] font-bold text-primary uppercase tracking-wider mb-2">💬 Chat with {linkedDoctor.name}</p>
+                  <div className="overflow-y-auto space-y-3 pr-1 text-xs max-h-[160px] mb-3">
                     {messages.map((msg) => (
                       <div key={msg.message_id || msg.sent_at} className={`flex flex-col ${msg.sender_id === user.id ? 'items-end' : 'items-start'}`}>
                         <span className="text-[9px] text-text-muted font-medium mb-0.5">
@@ -950,7 +1005,7 @@ export default function PatientDashboard() {
                       Send
                     </button>
                   </form>
-                </>
+                </div>
               )}
             </div>
           </div>

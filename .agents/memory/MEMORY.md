@@ -2,3 +2,4 @@
 - [Notification Types](notification-types.md) — All supported types: Medicine, Sugar Check, Alert, High Sugar, Low Sugar, Appointment, Emergency — must be consistent in server notificationService, Navbar NOTIF_TYPE config, and NotificationsPage TYPE_CONFIG.
 - [Auto Blood Sugar Alerts](auto-alerts.md) — sugarController calls sendBloodSugarAlert (non-blocking) after every High/Low reading; notifies patient + their doctor + caretaker.
 - [UI Design System](ui-design-system.md) — Framer Motion installed in client/; Tailwind v4 uses @utility blocks not @layer utilities; StatCard accepts delay prop for stagger; all dashboards use motion.div with ease [0.16,1,0.3,1].
+- [Multiple Care Team Links](care-team-links.md) — Requires junction tables patient_doctor_links / patient_caretaker_links; server queries BOTH new + old patients table for backward compat; PatientDashboard uses linkedDoctors[] / linkedCaretakers[] arrays with linkedDoctor = first element for chat compat.
