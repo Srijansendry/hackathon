@@ -7,6 +7,7 @@ import PatientDashboard from './pages/PatientDashboard'
 import DoctorDashboard from './pages/DoctorDashboard'
 import CaretakerDashboard from './pages/CaretakerDashboard'
 import NotificationsPage from './pages/NotificationsPage'
+import ProfilePage from './pages/ProfilePage'
 import ForegroundNotificationToast from './components/ForegroundNotificationToast'
 import FCMTestPanel from './components/FCMTestPanel'
 import { usePushNotifications } from './hooks/usePushNotifications'
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/readings" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/fcm-test" element={<FCMTestPanel />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
