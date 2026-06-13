@@ -180,30 +180,47 @@ function ActivityTracker() {
   )
 }
 
+const RELATIONS = ['Father', 'Mother', 'Spouse', 'Sibling', 'Child', 'Friend', 'Doctor', 'Other']
+
+function parseEmergencyContacts(raw) {
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [{ name: raw, phone: '', relation: 'Other' }] }
+}
+
 function EmergencyContactsCard({ user, onUpdate }) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ phone: user?.phone || '', emergencyContact: user?.emergencyContact || '' })
+  const [myPhone, setMyPhone] = useState(user?.phone || '')
+  const [contacts, setContacts] = useState(() => parseEmergencyContacts(user?.emergencyContact))
   const [saving, setSaving] = useState(false)
+
+  const openEdit = () => {
+    setMyPhone(user?.phone || '')
+    setContacts(parseEmergencyContacts(user?.emergencyContact))
+    setEditing(true)
+  }
+
+  const addContact = () => setContacts(prev => [...prev, { name: '', phone: '', relation: 'Other' }])
+  const removeContact = (i) => setContacts(prev => prev.filter((_, idx) => idx !== i))
+  const updateContact = (i, field, val) => setContacts(prev => prev.map((c, idx) => idx === i ? { ...c, [field]: val } : c))
 
   const handleSave = async (e) => {
     e.preventDefault()
     setSaving(true)
     try {
-      await onUpdate({ phone: form.phone, emergencyContact: form.emergencyContact })
+      const filled = contacts.filter(c => c.name || c.phone)
+      await onUpdate({ phone: myPhone, emergencyContact: filled.length ? JSON.stringify(filled) : '' })
       setEditing(false)
     } catch {}
     setSaving(false)
   }
 
-  const contacts = [
-    { label: "My Phone", value: user?.phone, icon: '📱', phone: user?.phone },
-    { label: 'Emergency Contact', value: user?.emergencyContact, icon: '🆘', phone: null },
-  ].filter(c => c.value)
-
+  const displayContacts = parseEmergencyContacts(user?.emergencyContact)
   const profileItems = [
     user?.bloodType && { icon: '🩸', label: 'Blood Type', value: user.bloodType },
     user?.dateOfBirth && { icon: '🎂', label: 'Date of Birth', value: new Date(user.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) },
   ].filter(Boolean)
+
+  const inputCls = "w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
 
   return (
     <div className="space-y-4">
@@ -217,58 +234,89 @@ function EmergencyContactsCard({ user, onUpdate }) {
             </div>
           </div>
           <button
-            onClick={() => { setEditing(v => !v); setForm({ phone: user?.phone || '', emergencyContact: user?.emergencyContact || '' }) }}
+            onClick={() => editing ? setEditing(false) : openEdit()}
             className="text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all cursor-pointer border-rose-200 text-rose-600 hover:bg-rose-100">
             {editing ? 'Cancel' : '✏️ Edit'}
           </button>
         </div>
 
         {editing ? (
-          <form onSubmit={handleSave} className="space-y-3">
+          <form onSubmit={handleSave} className="space-y-4">
+            {/* My Phone */}
             <div>
               <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">📱 My Phone Number</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="+1 555-0101"
-                className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
-              />
+              <input type="tel" value={myPhone} onChange={e => setMyPhone(e.target.value)}
+                placeholder="+1 555-0101" className={inputCls} />
             </div>
-            <div>
-              <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">🆘 Emergency Contact Name</label>
-              <input
-                type="text"
-                value={form.emergencyContact}
-                onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))}
-                placeholder="e.g. Family Member (+1 555-...)"
-                className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
-              />
+
+            {/* Emergency Contacts List */}
+            <div className="space-y-3">
+              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">🆘 Emergency Contacts</p>
+              {contacts.map((c, i) => (
+                <div key={i} className="bg-white/60 rounded-xl p-3 border border-rose-100 space-y-2">
+                  <div className="flex gap-2">
+                    <input type="text" value={c.name} onChange={e => updateContact(i, 'name', e.target.value)}
+                      placeholder="Contact name" className={`${inputCls} flex-1`} />
+                    <select value={c.relation} onChange={e => updateContact(i, 'relation', e.target.value)}
+                      className="bg-white/80 border border-rose-200 rounded-xl px-2 py-2 text-xs text-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-300 cursor-pointer">
+                      {RELATIONS.map(r => <option key={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <input type="tel" value={c.phone} onChange={e => updateContact(i, 'phone', e.target.value)}
+                      placeholder="Phone number" className={`${inputCls} flex-1`} />
+                    <button type="button" onClick={() => removeContact(i)}
+                      className="text-rose-400 hover:text-rose-600 hover:bg-rose-100 p-1.5 rounded-lg transition-all cursor-pointer shrink-0">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={addContact}
+                className="w-full border-2 border-dashed border-rose-200 hover:border-rose-400 text-rose-400 hover:text-rose-600 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Add Contact
+              </button>
             </div>
-            <button
-              type="submit"
-              disabled={saving}
+
+            <button type="submit" disabled={saving}
               className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50">
               {saving ? 'Saving…' : 'Save Changes'}
             </button>
           </form>
-        ) : contacts.length > 0 ? (
+        ) : (
           <div className="space-y-2">
-            {contacts.map((c, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
-                <span className="text-base shrink-0">{c.icon}</span>
+            {user?.phone && (
+              <div className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+                <span className="text-base shrink-0">📱</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">{c.label}</p>
-                  <p className="text-xs font-bold text-rose-900 truncate">{c.value}</p>
+                  <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">My Phone</p>
+                  <p className="text-xs font-bold text-rose-900 truncate">{user.phone}</p>
+                </div>
+                <a href={`tel:${user.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
+              </div>
+            )}
+            {displayContacts.map((c, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+                <span className="text-base shrink-0">🆘</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">{c.relation || 'Emergency Contact'}</p>
+                  <p className="text-xs font-bold text-rose-900 truncate">{c.name}</p>
+                  {c.phone && <p className="text-[10px] text-rose-400">{c.phone}</p>}
                 </div>
                 {c.phone && (
                   <a href={`tel:${c.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
                 )}
               </div>
             ))}
+            {!user?.phone && displayContacts.length === 0 && (
+              <p className="text-[11px] text-rose-400 text-center py-2">Tap ✏️ Edit to add your phone and emergency contacts.</p>
+            )}
           </div>
-        ) : (
-          <p className="text-[11px] text-rose-400 text-center py-2">Tap ✏️ Edit to add your phone and emergency contact.</p>
         )}
       </div>
 

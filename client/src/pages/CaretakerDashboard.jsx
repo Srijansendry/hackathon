@@ -106,11 +106,13 @@ function MedicationViewer({ patientName, prescriptions = [] }) {
 }
 
 // ── Emergency Card ─────────────────────────────────────────────────────────────
+function parseEmergencyContacts(raw) {
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [{ name: raw, phone: '', relation: 'Other' }] }
+}
+
 function EmergencyCard({ patient }) {
-  const contacts = [
-    patient?.phone && { label: "Patient's Phone", value: patient.phone, icon: '📱', phone: patient.phone },
-    (patient?.emergency_contact || patient?.emergencyContact) && { label: 'Emergency Contact', value: patient.emergency_contact || patient.emergencyContact, icon: '🆘', phone: null },
-  ].filter(Boolean)
+  const emergencyContacts = parseEmergencyContacts(patient?.emergency_contact || patient?.emergencyContact)
 
   return (
     <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl border border-rose-200/60 p-5 shadow-soft hover-lift transition-all duration-300">
@@ -122,18 +124,32 @@ function EmergencyCard({ patient }) {
         </div>
       </div>
       <div className="space-y-2">
-        {contacts.map((c, i) => (
-          <div key={i} className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
-            <span className="text-base shrink-0">{c.icon}</span>
+        {patient?.phone && (
+          <div className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+            <span className="text-base shrink-0">📱</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">{c.label}</p>
-              <p className="text-xs font-bold text-rose-900 truncate">{c.value}</p>
+              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Patient's Phone</p>
+              <p className="text-xs font-bold text-rose-900 truncate">{patient.phone}</p>
+            </div>
+            <a href={`tel:${patient.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
+          </div>
+        )}
+        {emergencyContacts.map((c, i) => (
+          <div key={i} className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+            <span className="text-base shrink-0">🆘</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">{c.relation || 'Emergency Contact'}</p>
+              <p className="text-xs font-bold text-rose-900 truncate">{c.name}</p>
+              {c.phone && <p className="text-[10px] text-rose-400">{c.phone}</p>}
             </div>
             {c.phone && (
               <a href={`tel:${c.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
             )}
           </div>
         ))}
+        {!patient?.phone && emergencyContacts.length === 0 && (
+          <p className="text-[11px] text-rose-400 text-center py-2">No contacts on file.</p>
+        )}
       </div>
     </div>
   )

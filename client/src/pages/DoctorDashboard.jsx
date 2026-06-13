@@ -146,8 +146,11 @@ export default function DoctorDashboard() {
   const [respondingId, setRespondingId] = useState(null)
   const [notifPatient, setNotifPatient] = useState(null)
   const [editingContacts, setEditingContacts] = useState(false)
-  const [contactForm, setContactForm] = useState({ phone: '', emergencyContact: '' })
+  const [contactPhone, setContactPhone] = useState('')
+  const [contactList, setContactList] = useState([])
   const [savingContacts, setSavingContacts] = useState(false)
+  const RELATIONS = ['Father', 'Mother', 'Spouse', 'Sibling', 'Child', 'Friend', 'Doctor', 'Other']
+  const parseEmergencyContacts = (raw) => { if (!raw) return []; try { return JSON.parse(raw) } catch { return [{ name: raw, phone: '', relation: 'Other' }] } }
 
   const fetchPatients = async () => {
     try {
@@ -301,9 +304,10 @@ export default function DoctorDashboard() {
     if (!selectedPatient) return
     setSavingContacts(true)
     try {
+      const filled = contactList.filter(c => c.name || c.phone)
       const { data } = await api.patch(`/doctor/patient/${selectedPatient.user_id}/contact`, {
-        phone: contactForm.phone,
-        emergencyContact: contactForm.emergencyContact
+        phone: contactPhone,
+        emergencyContact: filled.length ? JSON.stringify(filled) : ''
       })
       setSelectedPatient(prev => ({ ...prev, phone: data.phone, emergency_contact: data.emergencyContact }))
       setPatients(prev => prev.map(p => p.user_id === selectedPatient.user_id ? { ...p, phone: data.phone, emergency_contact: data.emergencyContact } : p))
@@ -455,7 +459,7 @@ export default function DoctorDashboard() {
                       Send Alert
                     </button>
                     <button
-                      onClick={() => { setEditingContacts(v => !v); setContactForm({ phone: selectedPatient.phone || '', emergencyContact: selectedPatient.emergency_contact || selectedPatient.emergencyContact || '' }) }}
+                      onClick={() => { setEditingContacts(v => !v); setContactPhone(selectedPatient.phone || ''); setContactList(parseEmergencyContacts(selectedPatient.emergency_contact || selectedPatient.emergencyContact || '')) }}
                       className="bg-surface-card hover:bg-rose-50 text-rose-600 px-4 py-2.5 border border-rose-200 rounded-xl font-semibold text-xs transition-all hover:shadow-sm hover:-translate-y-0.5 cursor-pointer flex items-center gap-2">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
@@ -478,35 +482,64 @@ export default function DoctorDashboard() {
                         <p className="text-[10px] text-rose-500">Updating info for {selectedPatient.name}</p>
                       </div>
                     </div>
-                    <form onSubmit={handleSaveContacts} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <form onSubmit={handleSaveContacts} className="space-y-4">
                       <div>
                         <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">📱 Patient Phone</label>
                         <input
                           type="tel"
-                          value={contactForm.phone}
-                          onChange={e => setContactForm(f => ({ ...f, phone: e.target.value }))}
+                          value={contactPhone}
+                          onChange={e => setContactPhone(e.target.value)}
                           placeholder="+1 555-0101"
                           className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
                         />
                       </div>
-                      <div>
-                        <label className="text-[9px] font-bold text-rose-500 uppercase tracking-wider block mb-1">🆘 Emergency Contact</label>
-                        <input
-                          type="text"
-                          value={contactForm.emergencyContact}
-                          onChange={e => setContactForm(f => ({ ...f, emergencyContact: e.target.value }))}
-                          placeholder="e.g. Family Member (+1 555-...)"
-                          className="w-full bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <button
-                          type="submit"
-                          disabled={savingContacts}
-                          className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50">
-                          {savingContacts ? 'Saving…' : 'Save Emergency Contacts'}
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">🆘 Emergency Contacts</p>
+                        {contactList.map((c, i) => (
+                          <div key={i} className="bg-white/60 rounded-xl p-3 border border-rose-100 space-y-2">
+                            <div className="flex gap-2">
+                              <input type="text" value={c.name}
+                                onChange={e => setContactList(prev => prev.map((x, idx) => idx === i ? { ...x, name: e.target.value } : x))}
+                                placeholder="Contact name"
+                                className="flex-1 bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                              />
+                              <select value={c.relation}
+                                onChange={e => setContactList(prev => prev.map((x, idx) => idx === i ? { ...x, relation: e.target.value } : x))}
+                                className="bg-white/80 border border-rose-200 rounded-xl px-2 py-2 text-xs text-rose-900 focus:outline-none focus:ring-2 focus:ring-rose-300 cursor-pointer">
+                                {RELATIONS.map(r => <option key={r}>{r}</option>)}
+                              </select>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                              <input type="tel" value={c.phone}
+                                onChange={e => setContactList(prev => prev.map((x, idx) => idx === i ? { ...x, phone: e.target.value } : x))}
+                                placeholder="Phone number"
+                                className="flex-1 bg-white/80 border border-rose-200 rounded-xl px-3 py-2 text-xs text-rose-900 placeholder:text-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                              />
+                              <button type="button"
+                                onClick={() => setContactList(prev => prev.filter((_, idx) => idx !== i))}
+                                className="text-rose-400 hover:text-rose-600 hover:bg-rose-100 p-1.5 rounded-lg transition-all cursor-pointer shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <button type="button"
+                          onClick={() => setContactList(prev => [...prev, { name: '', phone: '', relation: 'Other' }])}
+                          className="w-full border-2 border-dashed border-rose-200 hover:border-rose-400 text-rose-400 hover:text-rose-600 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                          Add Contact
                         </button>
                       </div>
+                      <button
+                        type="submit"
+                        disabled={savingContacts}
+                        className="w-full bg-rose-500 hover:bg-rose-600 text-white py-2 rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50">
+                        {savingContacts ? 'Saving…' : 'Save Emergency Contacts'}
+                      </button>
                     </form>
                   </motion.div>
                 )}
