@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { forgotPasswordService } from '../services/authService'
 
 // ── 3D Floating Health Metric Cards ──────────────────────────────────────────
 const healthMetrics = [
@@ -135,6 +136,10 @@ export default function Login() {
   const [photoPreview, setPhotoPreview] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotStatus, setForgotStatus] = useState(null)
+  const [forgotLoading, setForgotLoading] = useState(false)
   const { login, register } = useAuth()
   const navigate = useNavigate()
   const fileRef = useRef()
@@ -186,6 +191,33 @@ export default function Login() {
     setIsRegister(v => !v)
     setError('')
     setShowOptional(false)
+  }
+
+  const openForgot = () => {
+    setShowForgot(true)
+    setError('')
+    setForgotStatus(null)
+    setForgotEmail('')
+  }
+
+  const closeForgot = () => {
+    setShowForgot(false)
+    setForgotStatus(null)
+    setForgotEmail('')
+  }
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    setForgotStatus(null)
+    try {
+      await forgotPasswordService(forgotEmail)
+      setForgotStatus('sent')
+    } catch {
+      setForgotStatus('error')
+    } finally {
+      setForgotLoading(false)
+    }
   }
 
   const roleIcon = { Patient: '🫀', Doctor: '🩺', Caretaker: '🤝' }
@@ -263,7 +295,7 @@ export default function Login() {
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-slate-50 to-blue-50 rounded-full blur-3xl opacity-60 translate-y-1/3 -translate-x-1/4" />
 
         <motion.div
-          key={isRegister ? 'register' : 'login'}
+          key={showForgot ? 'forgot' : isRegister ? 'register' : 'login'}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -275,14 +307,14 @@ export default function Login() {
             <div className="inline-flex items-center gap-2 bg-primary-50 text-primary border border-primary/20 rounded-full px-3 py-1 mb-4">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] font-bold uppercase tracking-widest">
-                {isRegister ? `${activeTab} Registration` : 'Secure Sign In'}
+                {showForgot ? 'Password Recovery' : isRegister ? `${activeTab} Registration` : 'Secure Sign In'}
               </span>
             </div>
             <h2 className="text-[28px] font-black text-slate-800 tracking-tight mb-1.5 leading-tight">
-              {isRegister ? 'Create your account' : 'Welcome back'}
+              {showForgot ? 'Forgot Password?' : isRegister ? 'Create your account' : 'Welcome back'}
             </h2>
             <p className="text-slate-400 text-sm font-medium">
-              {isRegister ? 'Join the Glucolyse care network today.' : 'Sign in to continue to your dashboard.'}
+              {showForgot ? "Enter your email and we'll send a reset link." : isRegister ? 'Join the Glucolyse care network today.' : 'Sign in to continue to your dashboard.'}
             </p>
           </div>
 
@@ -302,6 +334,7 @@ export default function Login() {
           </AnimatePresence>
 
           {/* Role Tab Selector */}
+          {!showForgot && (
           <div className="bg-slate-100/80 p-1 rounded-2xl flex mb-6 border border-slate-200/60 shadow-inner gap-1">
             {['Patient', 'Doctor', 'Caretaker'].map((role) => (
               <button
@@ -319,7 +352,9 @@ export default function Login() {
               </button>
             ))}
           </div>
+          )}
 
+          {!showForgot && (
           <form onSubmit={handleSubmit} className="space-y-4">
 
             {/* Photo upload — registration only */}

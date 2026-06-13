@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { MobileNavProvider } from './context/MobileNavContext'
 import Login from './pages/Login'
+import ResetPassword from './pages/ResetPassword'
 import PatientDashboard from './pages/PatientDashboard'
 import DoctorDashboard from './pages/DoctorDashboard'
 import CaretakerDashboard from './pages/CaretakerDashboard'
@@ -56,6 +57,7 @@ export default function App() {
           <PushNotificationManager />
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
             <Route path="/readings" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
