@@ -10,7 +10,7 @@ import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
 import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import NotificationPermissionBanner from '../components/NotificationPermissionBanner'
-import { addReading, getReadings, getStats } from '../services/readingService'
+import { addReading, getReadings, getStats, updateReading } from '../services/readingService'
 import api from '../services/api'
 import { io } from 'socket.io-client'
 
@@ -307,6 +307,8 @@ export default function PatientDashboard() {
   const [form, setForm] = useState({ mealType: 'Breakfast', timing: 'Before Meal', sugarLevel: '' })
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('month')
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({ mealType: 'Breakfast', timing: 'Before Meal', sugarLevel: '', recordedAt: '' })
 
   const [prescriptions, setPrescriptions] = useState([])
 
@@ -461,6 +463,66 @@ export default function PatientDashboard() {
     try {
       await api.delete(`/readings/${readingId}`)
     } catch {}
+  }
+
+  const handleEditReading = (reading) => {
+    setEditingId(reading.reading_id)
+    setEditForm({
+      mealType: reading.meal_type,
+      timing: reading.timing,
+      sugarLevel: String(reading.sugar_level),
+      recordedAt: new Date(reading.recorded_at).toISOString().split('T')[0]
+    })
+  }
+
+  const handleSaveReading = async (readingId) => {
+    const level = parseInt(editForm.sugarLevel)
+    if (isNaN(level) || level <= 0) return
+
+    setReadings(prev => prev.map(r => {
+      if (r.reading_id === readingId) {
+        const newStatus = level > 140 ? 'High' : level < 80 ? 'Low' : 'Normal'
+        const origDate = new Date(r.recorded_at)
+        const newDateSelected = new Date(editForm.recordedAt)
+        if (!isNaN(newDateSelected.getTime())) {
+          origDate.setFullYear(newDateSelected.getFullYear())
+          origDate.setMonth(newDateSelected.getMonth())
+          origDate.setDate(newDateSelected.getDate())
+        }
+        return {
+          ...r,
+          meal_type: editForm.mealType,
+          timing: editForm.timing,
+          sugar_level: level,
+          status: newStatus,
+          recorded_at: origDate.toISOString()
+        }
+      }
+      return r
+    }))
+
+    setEditingId(null)
+
+    try {
+      const origReading = readings.find(r => r.reading_id === readingId)
+      const origDate = new Date(origReading.recorded_at)
+      const newDateSelected = new Date(editForm.recordedAt)
+      if (!isNaN(newDateSelected.getTime())) {
+        origDate.setFullYear(newDateSelected.getFullYear())
+        origDate.setMonth(newDateSelected.getMonth())
+        origDate.setDate(newDateSelected.getDate())
+      }
+      await updateReading(readingId, {
+        mealType: editForm.mealType,
+        timing: editForm.timing,
+        sugarLevel: level,
+        recordedAt: origDate.toISOString()
+      })
+      fetchData()
+    } catch (err) {
+      console.error('Failed to update reading:', err)
+      fetchData()
+    }
   }
 
   const togglePrescription = async (id) => {
@@ -686,32 +748,119 @@ export default function PatientDashboard() {
                           <th className="text-left pb-2 font-bold">Timing</th>
                           <th className="text-left pb-2 font-bold">Level</th>
                           <th className="text-left pb-2 font-bold">Status</th>
-                          <th className="text-right pb-2 font-bold">Remove</th>
+                          <th className="text-right pb-2 font-bold pr-2">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-border/50">
-                        {[...filteredReadings].reverse().map(r => (
-                          <tr key={r.reading_id} className="hover:bg-surface-elevated/40 transition-colors">
-                            <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                            <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
-                            <td className="py-2 text-text-secondary">{r.timing}</td>
-                            <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
-                            <td className="py-2">
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
-                                {r.status}
-                              </span>
-                            </td>
-                            <td className="py-2 text-right">
-                              <button onClick={() => handleDeleteReading(r.reading_id)}
-                                className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1 rounded-lg transition-all cursor-pointer"
-                                title="Remove this entry">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {[...filteredReadings].reverse().map(r => {
+                          const isEditing = editingId === r.reading_id
+                          return (
+                            <tr key={r.reading_id} className={`transition-colors ${isEditing ? 'bg-primary-50/25' : 'hover:bg-surface-elevated/40'}`}>
+                              {isEditing ? (
+                                <>
+                                  <td className="py-1">
+                                    <input
+                                      type="date"
+                                      value={editForm.recordedAt}
+                                      onChange={e => setEditForm(f => ({ ...f, recordedAt: e.target.value }))}
+                                      className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs w-28 focus:outline-none focus:border-primary text-text-body"
+                                    />
+                                  </td>
+                                  <td className="py-1">
+                                    <select
+                                      value={editForm.mealType}
+                                      onChange={e => setEditForm(f => ({ ...f, mealType: e.target.value }))}
+                                      className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs focus:outline-none focus:border-primary text-text-body"
+                                    >
+                                      {meals.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                  </td>
+                                  <td className="py-1">
+                                    <select
+                                      value={editForm.timing}
+                                      onChange={e => setEditForm(f => ({ ...f, timing: e.target.value }))}
+                                      className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs focus:outline-none focus:border-primary text-text-body"
+                                    >
+                                      {timings.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                  </td>
+                                  <td className="py-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <input
+                                        type="number"
+                                        value={editForm.sugarLevel}
+                                        onChange={e => setEditForm(f => ({ ...f, sugarLevel: e.target.value }))}
+                                        className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs w-16 focus:outline-none focus:border-primary text-text-body font-bold"
+                                        min="1"
+                                        max="999"
+                                      />
+                                      <span className="text-text-muted text-[10px]">mg/dL</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-1">
+                                    {(() => {
+                                      const val = parseInt(editForm.sugarLevel)
+                                      const tempStatus = isNaN(val) ? 'Normal' : val > 140 ? 'High' : val < 80 ? 'Low' : 'Normal'
+                                      return (
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${tempStatus === 'High' ? 'bg-rose-500/10 text-rose-600' : tempStatus === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                          {tempStatus}
+                                        </span>
+                                      )
+                                    })()}
+                                  </td>
+                                  <td className="py-1 text-right pr-1">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button onClick={() => handleSaveReading(r.reading_id)}
+                                        className="text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Save changes">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                      </button>
+                                      <button onClick={() => setEditingId(null)}
+                                        className="text-text-muted hover:bg-surface-elevated p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Cancel editing">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                                  <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
+                                  <td className="py-2 text-text-secondary">{r.timing}</td>
+                                  <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
+                                  <td className="py-2">
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                      {r.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 text-right pr-1">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button onClick={() => handleEditReading(r)}
+                                        className="text-text-muted hover:text-primary hover:bg-primary/5 p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Edit this entry">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 21.75a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                        </svg>
+                                      </button>
+                                      <button onClick={() => handleDeleteReading(r.reading_id)}
+                                        className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Remove this entry">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>

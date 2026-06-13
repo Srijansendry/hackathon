@@ -5,11 +5,11 @@ var _apiKey = '';
 if (_apiKey) {
   firebase.initializeApp({
     apiKey: '',
-    authDomain: 'glucolyse-6c57e.firebaseapp.com',
-    projectId: 'glucolyse-6c57e',
-    storageBucket: 'glucolyse-6c57e.firebasestorage.app',
-    messagingSenderId: '332019519481',
-    appId: '1:332019519481:web:d28043c6feb2032ebdb728'
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: ''
   })
 
   var messaging = firebase.messaging()

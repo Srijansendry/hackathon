@@ -143,3 +143,64 @@ export async function getMealAverages(req, res) {
     res.status(500).json({ error: 'Failed to fetch meal averages' })
   }
 }
+
+export async function updateReading(req, res) {
+  const { readingId } = req.params
+  const { mealType, timing, sugarLevel, recordedAt } = req.body
+  const patientId = req.user.userId
+
+  if (!mealType || !timing || !sugarLevel) {
+    return res.status(400).json({ error: 'All fields required' })
+  }
+
+  const level = parseInt(sugarLevel)
+  const status = calcStatus(level)
+
+  try {
+    const updateData = {
+      meal_type: mealType,
+      timing,
+      sugar_level: level,
+      status,
+    }
+
+    if (recordedAt) {
+      updateData.recorded_at = new Date(recordedAt).toISOString()
+    }
+
+    const { data, error } = await supabase
+      .from('sugar_readings')
+      .update(updateData)
+      .eq('reading_id', readingId)
+      .eq('patient_id', patientId)
+      .select()
+      .single()
+
+    if (error) throw error
+    res.json(data)
+
+    emitToUser(patientId, 'updateReading', data)
+
+    supabase
+      .from('patients')
+      .select('doctor_id, caretaker_id')
+      .eq('patient_id', patientId)
+      .maybeSingle()
+      .then(({ data: pat }) => {
+        if (!pat) return
+        if (pat.doctor_id) emitToUser(pat.doctor_id, 'updateReading', { ...data, patient_id: patientId })
+        if (pat.caretaker_id && pat.caretaker_id !== pat.doctor_id) emitToUser(pat.caretaker_id, 'updateReading', { ...data, patient_id: patientId })
+      })
+      .catch(() => {})
+
+    if (status !== 'Normal') {
+      sendBloodSugarAlert(patientId, level, mealType, timing).catch(err =>
+        console.error('[AutoAlert] Blood sugar alert error:', err.message)
+      )
+    }
+  } catch (err) {
+    console.error('updateReading error:', err)
+    res.status(500).json({ error: 'Failed to update reading' })
+  }
+}
+
