@@ -25,7 +25,7 @@ export default function StatCard({ title, value, unit = 'mg/dL', trend, icon, co
         </div>
         {trend && (
           <span className={`text-[10px] font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-full transition-all duration-200 ${trendColors[trend] || ''}`}>
-            {trend}
+            {trend === 'Normal' ? 'Average' : trend}
           </span>
         )}
       </div>
