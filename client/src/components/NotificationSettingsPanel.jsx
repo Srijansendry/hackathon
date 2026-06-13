@@ -3,7 +3,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications'
 import { testPushNotification } from '../services/notificationService'
 
 export default function NotificationSettingsPanel() {
-  const { permission, tokenStatus, error, enable, disable } = usePushNotifications()
+  const { permission, tokenStatus, enable, disable } = usePushNotifications()
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState(null)
 

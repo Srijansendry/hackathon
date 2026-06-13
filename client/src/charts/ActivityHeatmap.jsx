@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 export default function ActivityHeatmap({ data = [] }) {
   // Generate the last 14 weeks (98 days)

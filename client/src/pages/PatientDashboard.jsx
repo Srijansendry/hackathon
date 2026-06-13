@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,12 +10,43 @@ import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
 import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import NotificationPermissionBanner from '../components/NotificationPermissionBanner'
-import { addReading, getReadings, getStats } from '../services/readingService'
+import { addReading, getReadings, getStats, updateReading } from '../services/readingService'
 import api from '../services/api'
 import { io } from 'socket.io-client'
 
 const meals = ['Breakfast', 'Lunch', 'Dinner']
 const timings = ['Before Meal', 'After Meal']
+
+// ── Mock Data Helper ──────────────────────────────────────────────────────────
+const getPatientMockData = (userId) => {
+  const now = Date.now()
+  const pId = userId || 'p-uuid-1'
+  return {
+    readings: [
+      { reading_id: 'sr-1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(now - 86400000 * 4).toISOString() },
+      { reading_id: 'sr-2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(now - 86400000 * 3).toISOString() },
+      { reading_id: 'sr-3', sugar_level: 130, meal_type: 'Dinner', timing: 'After Meal', status: 'Normal', recorded_at: new Date(now - 86400000 * 2).toISOString() },
+      { reading_id: 'sr-4', sugar_level: 72, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Low', recorded_at: new Date(now - 86400000 * 1).toISOString() },
+      { reading_id: 'sr-5', sugar_level: 118, meal_type: 'Lunch', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(now).toISOString() }
+    ],
+    stats: { avg_level: 117, min_level: 72, max_level: 155, total_readings: 5 },
+    linkedDoctor: { user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor' },
+    linkedCaretaker: { user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker' },
+    messages: [
+      { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: pId, sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(now - 3600000 * 4).toISOString() },
+      { message_id: 'm-2', sender_id: pId, receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(now - 3600000 * 3).toISOString() }
+    ],
+    caretakerMessages: [
+      { message_id: 'cm-1', sender_id: 'c-uuid-1', receiver_id: pId, sender_name: 'John Miller', sender_role: 'Caretaker', message_text: "Hi! Just checking in — how are you feeling today?", sent_at: new Date(now - 3600000 * 2).toISOString() }
+    ]
+  }
+}
+
+// ── Readings Cutoff Helper ───────────────────────────────────────────────────
+const getReadingsCutoff = (filter) => {
+  const now = Date.now()
+  return filter === 'week' ? now - 7*86400000 : filter === 'month' ? now - 30*86400000 : now - 365*86400000
+}
 
 function SmartInsights({ readings = [], stats }) {
   if (readings.length === 0 || !stats) return null
@@ -210,7 +241,9 @@ function EmergencyContactsCard({ user, onUpdate }) {
       const filled = contacts.filter(c => c.name || c.phone)
       await onUpdate({ phone: myPhone, emergencyContact: filled.length ? JSON.stringify(filled) : '' })
       setEditing(false)
-    } catch {}
+    } catch {
+      // Ignore profile update error
+    }
     setSaving(false)
   }
 
@@ -355,6 +388,8 @@ export default function PatientDashboard() {
   const [form, setForm] = useState({ mealType: 'Breakfast', timing: 'Before Meal', sugarLevel: '' })
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState('month')
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({ mealType: 'Breakfast', timing: 'Before Meal', sugarLevel: '', recordedAt: '' })
 
   const [prescriptions, setPrescriptions] = useState([])
 
@@ -402,24 +437,13 @@ export default function PatientDashboard() {
       if (activeDoc) setMessages(results[2]?.data || [])
       if (activeCT) setCaretakerMessages(results[activeDoc ? 3 : 2]?.data || [])
     } catch {
-      const dummyReadings = [
-        { reading_id: 'sr-1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 4).toISOString() },
-        { reading_id: 'sr-2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(Date.now() - 86400000 * 3).toISOString() },
-        { reading_id: 'sr-3', sugar_level: 130, meal_type: 'Dinner', timing: 'After Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-        { reading_id: 'sr-4', sugar_level: 72, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Low', recorded_at: new Date(Date.now() - 86400000 * 1).toISOString() },
-        { reading_id: 'sr-5', sugar_level: 118, meal_type: 'Lunch', timing: 'Before Meal', status: 'Normal', recorded_at: new Date().toISOString() }
-      ]
-      setReadings(dummyReadings)
-      setStats({ avg_level: 117, min_level: 72, max_level: 155, total_readings: 5 })
-      setLinkedDoctors([{ user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor', email: 'doctor@glucolyse.com' }])
-      setLinkedCaretakers([{ user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker', email: 'caretaker@glucolyse.com' }])
-      setMessages([
-        { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-        { message_id: 'm-2', sender_id: user?.id || 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
-      ])
-      setCaretakerMessages([
-        { message_id: 'cm-1', sender_id: 'c-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'John Miller', sender_role: 'Caretaker', message_text: "Hi! Just checking in — how are you feeling today?", sent_at: new Date(Date.now() - 3600000 * 2).toISOString() }
-      ])
+      const mock = getPatientMockData(user?.id)
+      setReadings(mock.readings)
+      setStats(mock.stats)
+      setLinkedDoctors(mock.linkedDoctor ? [mock.linkedDoctor] : [])
+      setLinkedCaretakers(mock.linkedCaretaker ? [mock.linkedCaretaker] : [])
+      setMessages(mock.messages)
+      setCaretakerMessages(mock.caretakerMessages)
     }
   }
 
@@ -427,7 +451,9 @@ export default function PatientDashboard() {
     try {
       const { data } = await api.get('/doctor/requests/mine')
       setOutgoingRequests(data)
-    } catch {}
+    } catch {
+      // Ignore background fetch requests error
+    }
   }
 
   const handleCareSearch = async (e) => {
@@ -437,8 +463,11 @@ export default function PatientDashboard() {
     try {
       const { data } = await api.get(`/doctor/search?q=${encodeURIComponent(careSearch)}`)
       setCareResults(data)
-    } catch { setCareResults([]) }
-    finally { setCareSearchLoading(false) }
+    } catch {
+      setCareResults([])
+    } finally {
+      setCareSearchLoading(false)
+    }
   }
 
   const handleSendRequest = async (toId) => {
@@ -447,7 +476,9 @@ export default function PatientDashboard() {
       await fetchMyRequests()
       setCareResults([])
       setCareSearch('')
-    } catch {}
+    } catch {
+      // Ignore request failure
+    }
   }
 
   const handleUnlink = async (memberId, memberRole) => {
@@ -460,7 +491,9 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     const s = io(window.location.origin)
-    setSocket(s)
+    Promise.resolve().then(() => {
+      setSocket(s)
+    })
     if (user?.id) s.emit('register', user.id)
     s.on('newMessage', (msg) => {
       const isFromDoctor = linkedDoctor && (msg.sender_id === linkedDoctor.user_id || msg.receiver_id === linkedDoctor.user_id)
@@ -491,7 +524,14 @@ export default function PatientDashboard() {
     }
   }, [pathname])
 
-  useEffect(() => { fetchData(); fetchMyRequests(); fetchPrescriptions() }, [filter])
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchData()
+      fetchMyRequests()
+      fetchPrescriptions()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter])
 
   const handleAdd = async (e) => {
     e.preventDefault()
@@ -519,7 +559,69 @@ export default function PatientDashboard() {
     setReadings(prev => prev.filter(r => r.reading_id !== readingId))
     try {
       await api.delete(`/readings/${readingId}`)
-    } catch {}
+    } catch {
+      // Ignore background delete errors
+    }
+  }
+
+  const handleEditReading = (reading) => {
+    setEditingId(reading.reading_id)
+    setEditForm({
+      mealType: reading.meal_type,
+      timing: reading.timing,
+      sugarLevel: String(reading.sugar_level),
+      recordedAt: new Date(reading.recorded_at).toISOString().split('T')[0]
+    })
+  }
+
+  const handleSaveReading = async (readingId) => {
+    const level = parseInt(editForm.sugarLevel)
+    if (isNaN(level) || level <= 0) return
+
+    setReadings(prev => prev.map(r => {
+      if (r.reading_id === readingId) {
+        const newStatus = level > 140 ? 'High' : level < 80 ? 'Low' : 'Normal'
+        const origDate = new Date(r.recorded_at)
+        const newDateSelected = new Date(editForm.recordedAt)
+        if (!isNaN(newDateSelected.getTime())) {
+          origDate.setFullYear(newDateSelected.getFullYear())
+          origDate.setMonth(newDateSelected.getMonth())
+          origDate.setDate(newDateSelected.getDate())
+        }
+        return {
+          ...r,
+          meal_type: editForm.mealType,
+          timing: editForm.timing,
+          sugar_level: level,
+          status: newStatus,
+          recorded_at: origDate.toISOString()
+        }
+      }
+      return r
+    }))
+
+    setEditingId(null)
+
+    try {
+      const origReading = readings.find(r => r.reading_id === readingId)
+      const origDate = new Date(origReading.recorded_at)
+      const newDateSelected = new Date(editForm.recordedAt)
+      if (!isNaN(newDateSelected.getTime())) {
+        origDate.setFullYear(newDateSelected.getFullYear())
+        origDate.setMonth(newDateSelected.getMonth())
+        origDate.setDate(newDateSelected.getDate())
+      }
+      await updateReading(readingId, {
+        mealType: editForm.mealType,
+        timing: editForm.timing,
+        sugarLevel: level,
+        recordedAt: origDate.toISOString()
+      })
+      fetchData()
+    } catch {
+      console.error('Failed to update reading')
+      fetchData()
+    }
   }
 
   const togglePrescription = async (id) => {
@@ -527,7 +629,9 @@ export default function PatientDashboard() {
     try {
       const { data } = await api.patch(`/prescriptions/${id}/toggle`)
       setPrescriptions(prev => prev.map(p => (p.id || p.prescription_id) === id ? { ...p, status: data.status } : p))
-    } catch {}
+    } catch {
+      // Ignore prescription status toggle error
+    }
   }
 
   const handleSendCaretakerMessage = async (e) => {
@@ -561,8 +665,7 @@ export default function PatientDashboard() {
   }
 
   const filteredReadings = useMemo(() => {
-    const now = Date.now()
-    const cutoff = filter === 'week' ? now - 7*86400000 : filter === 'month' ? now - 30*86400000 : now - 365*86400000
+    const cutoff = getReadingsCutoff(filter)
     return readings.filter(r => new Date(r.recorded_at).getTime() >= cutoff)
   }, [readings, filter])
 
@@ -749,32 +852,119 @@ export default function PatientDashboard() {
                           <th className="text-left pb-2 font-bold">Timing</th>
                           <th className="text-left pb-2 font-bold">Level</th>
                           <th className="text-left pb-2 font-bold">Status</th>
-                          <th className="text-right pb-2 font-bold">Remove</th>
+                          <th className="text-right pb-2 font-bold pr-2">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-border/50">
-                        {[...filteredReadings].reverse().map(r => (
-                          <tr key={r.reading_id} className="hover:bg-surface-elevated/40 transition-colors">
-                            <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                            <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
-                            <td className="py-2 text-text-secondary">{r.timing}</td>
-                            <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
-                            <td className="py-2">
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
-                                {r.status}
-                              </span>
-                            </td>
-                            <td className="py-2 text-right">
-                              <button onClick={() => handleDeleteReading(r.reading_id)}
-                                className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1 rounded-lg transition-all cursor-pointer"
-                                title="Remove this entry">
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {[...filteredReadings].reverse().map(r => {
+                          const isEditing = editingId === r.reading_id
+                          return (
+                            <tr key={r.reading_id} className={`transition-colors ${isEditing ? 'bg-primary-50/25' : 'hover:bg-surface-elevated/40'}`}>
+                              {isEditing ? (
+                                <>
+                                  <td className="py-1">
+                                    <input
+                                      type="date"
+                                      value={editForm.recordedAt}
+                                      onChange={e => setEditForm(f => ({ ...f, recordedAt: e.target.value }))}
+                                      className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs w-28 focus:outline-none focus:border-primary text-text-body"
+                                    />
+                                  </td>
+                                  <td className="py-1">
+                                    <select
+                                      value={editForm.mealType}
+                                      onChange={e => setEditForm(f => ({ ...f, mealType: e.target.value }))}
+                                      className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs focus:outline-none focus:border-primary text-text-body"
+                                    >
+                                      {meals.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                  </td>
+                                  <td className="py-1">
+                                    <select
+                                      value={editForm.timing}
+                                      onChange={e => setEditForm(f => ({ ...f, timing: e.target.value }))}
+                                      className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs focus:outline-none focus:border-primary text-text-body"
+                                    >
+                                      {timings.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                  </td>
+                                  <td className="py-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <input
+                                        type="number"
+                                        value={editForm.sugarLevel}
+                                        onChange={e => setEditForm(f => ({ ...f, sugarLevel: e.target.value }))}
+                                        className="px-2 py-1 border border-surface-border bg-surface rounded-lg text-xs w-16 focus:outline-none focus:border-primary text-text-body font-bold"
+                                        min="1"
+                                        max="999"
+                                      />
+                                      <span className="text-text-muted text-[10px]">mg/dL</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-1">
+                                    {(() => {
+                                      const val = parseInt(editForm.sugarLevel)
+                                      const tempStatus = isNaN(val) ? 'Normal' : val > 140 ? 'High' : val < 80 ? 'Low' : 'Normal'
+                                      return (
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${tempStatus === 'High' ? 'bg-rose-500/10 text-rose-600' : tempStatus === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                          {tempStatus}
+                                        </span>
+                                      )
+                                    })()}
+                                  </td>
+                                  <td className="py-1 text-right pr-1">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button onClick={() => handleSaveReading(r.reading_id)}
+                                        className="text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Save changes">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                        </svg>
+                                      </button>
+                                      <button onClick={() => setEditingId(null)}
+                                        className="text-text-muted hover:bg-surface-elevated p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Cancel editing">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td className="py-2 text-text-secondary">{new Date(r.recorded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                                  <td className="py-2 text-text-body font-medium">{r.meal_type}</td>
+                                  <td className="py-2 text-text-secondary">{r.timing}</td>
+                                  <td className="py-2 font-bold text-text-heading">{r.sugar_level} <span className="font-normal text-text-muted">mg/dL</span></td>
+                                  <td className="py-2">
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${r.status === 'High' ? 'bg-rose-500/10 text-rose-600' : r.status === 'Low' ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+                                      {r.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 text-right pr-1">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button onClick={() => handleEditReading(r)}
+                                        className="text-text-muted hover:text-primary hover:bg-primary/5 p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Edit this entry">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 21.75a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                        </svg>
+                                      </button>
+                                      <button onClick={() => handleDeleteReading(r.reading_id)}
+                                        className="text-text-muted hover:text-rose-500 hover:bg-rose-50 p-1.5 rounded-lg transition-all cursor-pointer"
+                                        title="Remove this entry">
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>

@@ -10,5 +10,35 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        const removeBadge = () => {
+          const badges = document.querySelectorAll('#replit-badge, .replit-badge, #replit-badge-v2, .replit-badge-v2, .__replit-badge, .__replit-badge-v2');
+          badges.forEach(badge => badge.remove());
+        };
+        removeBadge();
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                if (
+                  node.id === 'replit-badge' ||
+                  node.id === 'replit-badge-v2' ||
+                  node.classList.contains('replit-badge') ||
+                  node.classList.contains('replit-badge-v2') ||
+                  node.classList.contains('__replit-badge') ||
+                  node.classList.contains('__replit-badge-v2')
+                ) {
+                  node.remove();
+                }
+              }
+            });
+          });
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+        setInterval(removeBadge, 1000);
+      })();
+    </script>
   </body>
 </html>
+

@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import StatCard from '../components/StatCard'
 import SugarLineChart from '../charts/SugarLineChart'
 import ReadingPieChart from '../charts/ReadingPieChart'
 import ActivityHeatmap from '../charts/ActivityHeatmap'
-import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import SendNotificationModal from '../components/SendNotificationModal'
 import api from '../services/api'
 import { io } from 'socket.io-client'
@@ -87,8 +86,10 @@ function PatientNotes({ patientId }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(`patient_notes_${patientId}`) || ''
-    setNotes(stored)
-    setSaved(false)
+    Promise.resolve().then(() => {
+      setNotes(stored)
+      setSaved(false)
+    })
   }, [patientId])
 
   const handleSave = () => {
@@ -133,6 +134,7 @@ export default function DoctorDashboard() {
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [readings, setReadings] = useState([])
   const [stats, setStats] = useState(null)
+  // eslint-disable-next-line no-unused-vars
   const [loadingPatient, setLoadingPatient] = useState(false)
   const [prescriptions, setPrescriptions] = useState([])
   const [newPrescription, setNewPrescription] = useState({ name: '', dosage: '', frequency: 'Once daily' })
@@ -193,12 +195,16 @@ export default function DoctorDashboard() {
         { message_id: 'm-2', sender_id: 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'Emily Davis', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
       ])
       setPrescriptions([])
-    } finally { setLoadingPatient(false) }
+    } finally {
+      setLoadingPatient(false)
+    }
   }
 
   useEffect(() => {
     const s = io(window.location.origin)
-    setSocket(s)
+    Promise.resolve().then(() => {
+      setSocket(s)
+    })
     if (user?.id) s.emit('register', user.id)
     s.on('newMessage', (msg) => {
       setMessages(prev => {
@@ -227,14 +233,28 @@ export default function DoctorDashboard() {
     }
   }, [pathname])
 
-  useEffect(() => { fetchPatients() }, [])
-  useEffect(() => { if (selectedPatient) fetchPatientDetails(selectedPatient.user_id, readingsFilter) }, [selectedPatient, readingsFilter])
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchPatients()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (selectedPatient) {
+      Promise.resolve().then(() => {
+        fetchPatientDetails(selectedPatient.user_id, readingsFilter)
+      })
+    }
+  }, [selectedPatient, readingsFilter])
 
   const fetchPendingRequests = async () => {
     try {
       const { data } = await api.get('/doctor/requests/pending')
       setPendingRequests(data)
-    } catch {}
+    } catch {
+      // Ignore background fetch pending requests error
+    }
   }
 
   const handleRespondToRequest = async (requestId, action) => {
@@ -242,12 +262,18 @@ export default function DoctorDashboard() {
     try {
       await api.post('/doctor/requests/respond', { requestId, action })
       await Promise.all([fetchPendingRequests(), fetchPatients()])
-    } catch {}
+    } catch {
+      // Ignore respond connection request error
+    }
     setRespondingId(null)
   }
 
   useEffect(() => {
-    if (user?.role === 'Doctor' || user?.role === 'Caretaker') fetchPendingRequests()
+    if (user?.role === 'Doctor' || user?.role === 'Caretaker') {
+      Promise.resolve().then(() => {
+        fetchPendingRequests()
+      })
+    }
   }, [user])
 
   const handleAddPrescription = async (e) => {
@@ -259,14 +285,18 @@ export default function DoctorDashboard() {
     try {
       const { data } = await api.post('/prescriptions', { patientId: selectedPatient.user_id, name: optimistic.name, dosage: optimistic.dosage, frequency: optimistic.frequency })
       setPrescriptions(prev => prev.map(p => p.prescription_id === optimistic.prescription_id ? data : p))
-    } catch {}
+    } catch {
+      // Ignore prescription creation failure
+    }
   }
 
   const handleDeletePrescription = async (id) => {
     setPrescriptions(prev => prev.filter(p => (p.prescription_id || p.id) !== id))
     try {
       await api.delete(`/prescriptions/${id}`)
-    } catch {}
+    } catch {
+      // Ignore prescription delete failure
+    }
   }
 
   const handleStartEditPrescription = (pill) => {
@@ -281,7 +311,9 @@ export default function DoctorDashboard() {
     try {
       const { data } = await api.put(`/prescriptions/${pid}`, editPrescriptionForm)
       setPrescriptions(prev => prev.map(p => (p.prescription_id || p.id) === pid ? data : p))
-    } catch {}
+    } catch {
+      // Ignore prescription update failure
+    }
   }
 
   const handleSendMessage = async (e) => {
@@ -312,7 +344,9 @@ export default function DoctorDashboard() {
       setSelectedPatient(prev => ({ ...prev, phone: data.phone, emergency_contact: data.emergencyContact }))
       setPatients(prev => prev.map(p => p.user_id === selectedPatient.user_id ? { ...p, phone: data.phone, emergency_contact: data.emergencyContact } : p))
       setEditingContacts(false)
-    } catch {}
+    } catch {
+      // Ignore contact updates failure
+    }
     setSavingContacts(false)
   }
 

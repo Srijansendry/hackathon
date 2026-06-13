@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -275,7 +275,7 @@ export default function Login() {
               { label: 'Secure messaging', icon: '🔒' },
               { label: 'Smart insights', icon: '✨' },
               { label: 'Care team sync', icon: '🤝' },
-            ].map((f, i) => (
+            ].map((f) => (
               <span key={f.label} className="flex items-center gap-1.5 text-[10px] font-semibold text-white/75 bg-white/8 border border-white/12 px-3 py-1.5 rounded-full backdrop-blur-sm hover:bg-white/15 hover:border-white/25 transition-all duration-200 cursor-default">
                 <span>{f.icon}</span>{f.label}
               </span>
@@ -333,25 +333,34 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          {/* Role Tab Selector */}
           {!showForgot && (
-          <div className="bg-slate-100/80 p-1 rounded-2xl flex mb-6 border border-slate-200/60 shadow-inner gap-1">
-            {['Patient', 'Doctor', 'Caretaker'].map((role) => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => setActiveTab(role)}
-                className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-all duration-250 cursor-pointer flex items-center justify-center gap-1.5 relative ${
-                  activeTab === role
-                    ? 'bg-white text-[#3d6f9f] shadow-md border border-blue-100/50'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'
-                }`}
-              >
-                <span className="text-base">{roleIcon[role]}</span>
-                <span className="hidden sm:inline">{role}</span>
-              </button>
-            ))}
-          </div>
+            <div className="bg-slate-100/80 p-1 rounded-2xl flex mb-6 border border-slate-200/60 shadow-inner gap-1 relative overflow-hidden">
+              {['Patient', 'Doctor', 'Caretaker'].map((role) => {
+                const isActive = activeTab === role
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setActiveTab(role)}
+                    className={`flex-1 py-2.5 text-xs font-extrabold rounded-xl transition-colors duration-300 cursor-pointer flex items-center justify-center gap-1.5 relative z-10 ${
+                      isActive
+                        ? 'text-[#3d6f9f]'
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <span className="text-base">{roleIcon[role]}</span>
+                    <span className="hidden sm:inline">{role}</span>
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeTabPill"
+                        className="absolute inset-0 bg-white shadow-md border border-blue-100/50 rounded-xl -z-10"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
           )}
 
           {!showForgot && (

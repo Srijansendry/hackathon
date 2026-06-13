@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
 import StatCard from '../components/StatCard'
@@ -11,6 +11,25 @@ import NotificationSettingsPanel from '../components/NotificationSettingsPanel'
 import SendNotificationModal from '../components/SendNotificationModal'
 import api from '../services/api'
 import { io } from 'socket.io-client'
+
+// ── Mock Data Helper ──────────────────────────────────────────────────────────
+const getCaretakerMockData = () => {
+  const now = Date.now()
+  return {
+    patient: { user_id: 'p-uuid-1', name: 'Emily Davis', email: 'patient@glucolyse.com', blood_type: 'O+', phone: '+1 555-0101' },
+    stats: { avg_level: 126, min_level: 94, max_level: 162, total_readings: 12 },
+    readings: [
+      { reading_id: '1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(now - 86400000 * 3).toISOString() },
+      { reading_id: '2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(now - 86400000 * 2).toISOString() },
+      { reading_id: '3', sugar_level: 94, meal_type: 'Dinner', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(now - 86400000).toISOString() },
+      { reading_id: '4', sugar_level: 162, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(now).toISOString() },
+    ],
+    messages: [
+      { message_id: 'm-1', sender_id: 'p-uuid-1', receiver_id: 'c-uuid-1', sender_name: 'Emily Davis', message_text: 'Feeling a bit tired today, blood sugar was high after lunch.', sent_at: new Date(now - 3600000 * 2).toISOString() },
+      { message_id: 'm-2', sender_id: 'c-uuid-1', receiver_id: 'p-uuid-1', sender_name: 'You', message_text: "I'll prepare something lighter for dinner. Make sure to rest!", sent_at: new Date(now - 3600000).toISOString() },
+    ]
+  }
+}
 
 // ── Glucose Gauge ─────────────────────────────────────────────────────────────
 function GlucoseGauge({ avg, min, max }) {
@@ -105,42 +124,47 @@ function MedicationViewer({ patientName, prescriptions = [] }) {
   )
 }
 
-// ── Emergency Card ─────────────────────────────────────────────────────────────
+// ── Caretaker Contact Info ──────────────────────────────────────────────────
 function parseEmergencyContacts(raw) {
   if (!raw) return []
-  try { return JSON.parse(raw) } catch { return [{ name: raw, phone: '', relation: 'Other' }] }
+  try { return JSON.parse(raw) } catch { return [{ name: raw, phone: '', relation: 'Emergency Contact' }] }
 }
 
-function EmergencyCard({ patient }) {
-  const emergencyContacts = parseEmergencyContacts(patient?.emergency_contact || patient?.emergencyContact)
+function CaretakerContactInfo({ patient }) {
+  if (!patient) return null
+  const emergencyContacts = parseEmergencyContacts(patient.emergency_contact || patient.emergencyContact)
 
   return (
-    <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-2xl border border-rose-200/60 p-5 shadow-soft hover-lift transition-all duration-300">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-500 flex items-center justify-center text-base">🚨</div>
-        <div>
-          <h3 className="text-sm font-bold text-rose-800">Emergency Contacts</h3>
-          <p className="text-[10px] text-rose-500">Quick-access critical info</p>
-        </div>
-      </div>
-      <div className="space-y-2">
-        {patient?.phone && (
-          <div className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+    <div className="bg-surface-card rounded-2xl border border-surface-border p-6 shadow-soft hover-lift transition-all duration-300">
+      <h3 className="text-sm font-bold text-text-heading mb-0.5">Contact Details</h3>
+      <p className="text-[10px] text-text-muted mb-4">Patient contact coordinates</p>
+      <div className="space-y-3">
+        {patient.phone && (
+          <div className="flex items-center gap-3 bg-surface-elevated/40 rounded-xl px-3 py-2.5 border border-surface-border/50 hover:border-primary-100 transition-colors">
             <span className="text-base shrink-0">📱</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Patient's Phone</p>
-              <p className="text-xs font-bold text-rose-900 truncate">{patient.phone}</p>
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider">Primary Phone</p>
+              <p className="text-xs font-bold text-text-secondary truncate">{patient.phone}</p>
             </div>
             <a href={`tel:${patient.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
           </div>
         )}
-        {emergencyContacts.map((c, i) => (
-          <div key={i} className="flex items-center gap-3 bg-white/70 rounded-xl px-3 py-2.5 border border-rose-100 hover:border-rose-300/60 transition-colors">
+        {patient.email && (
+          <div className="flex items-center gap-3 bg-surface-elevated/40 rounded-xl px-3 py-2.5 border border-surface-border/50 hover:border-primary-100 transition-colors">
+            <span className="text-base shrink-0">✉️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider">Patient Email</p>
+              <p className="text-xs font-bold text-text-secondary truncate">{patient.email}</p>
+            </div>
+          </div>
+        )}
+        {emergencyContacts.map((c, idx) => (
+          <div key={idx} className="flex items-center gap-3 bg-surface-elevated/40 rounded-xl px-3 py-2.5 border border-surface-border/50 hover:border-primary-100 transition-colors">
             <span className="text-base shrink-0">🆘</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">{c.relation || 'Emergency Contact'}</p>
-              <p className="text-xs font-bold text-rose-900 truncate">{c.name}</p>
-              {c.phone && <p className="text-[10px] text-rose-400">{c.phone}</p>}
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider">{c.relation || 'Emergency Contact'}</p>
+              <p className="text-xs font-bold text-text-secondary truncate">{c.name}</p>
+              {c.phone && <p className="text-[10px] text-text-muted">{c.phone}</p>}
             </div>
             {c.phone && (
               <a href={`tel:${c.phone}`} className="text-[10px] font-bold text-rose-600 hover:text-rose-800 transition-colors shrink-0">Call →</a>
@@ -173,7 +197,7 @@ function WellnessCheckin({ patientName }) {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-bold text-text-heading">Daily Care Checklist</h3>
-          <p className="text-[10px] text-text-muted mt-0.5">Your care tasks for today</p>
+          <p className="text-[10px] text-text-muted mt-0.5">Your care tasks for {patientName || 'today'}</p>
         </div>
         <div className="text-right">
           <span className="text-lg font-extrabold text-primary">{doneCount}</span>
@@ -182,7 +206,6 @@ function WellnessCheckin({ patientName }) {
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="w-full h-1.5 bg-surface-elevated rounded-full mb-4 overflow-hidden">
         <div className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full transition-all duration-500"
           style={{ width: `${(doneCount / checkins.length) * 100}%` }} />
@@ -238,18 +261,11 @@ export default function CaretakerDashboard() {
         setPrescriptions(rxRes.data)
       }
     } catch {
-      setPatient({ user_id: 'p-uuid-1', name: 'Emily Davis', email: 'patient@glucolyse.com', blood_type: 'O+', phone: '+1 555-0101' })
-      setStats({ avg_level: 126, min_level: 94, max_level: 162, total_readings: 12 })
-      setReadings([
-        { reading_id: '1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 3).toISOString() },
-        { reading_id: '2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-        { reading_id: '3', sugar_level: 94, meal_type: 'Dinner', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000).toISOString() },
-        { reading_id: '4', sugar_level: 162, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date().toISOString() },
-      ])
-      setMessages([
-        { message_id: 'm-1', sender_id: 'p-uuid-1', receiver_id: 'c-uuid-1', sender_name: 'Emily Davis', message_text: 'Feeling a bit tired today, blood sugar was high after lunch.', sent_at: new Date(Date.now() - 3600000 * 2).toISOString() },
-        { message_id: 'm-2', sender_id: 'c-uuid-1', receiver_id: 'p-uuid-1', sender_name: 'You', message_text: "I'll prepare something lighter for dinner. Make sure to rest!", sent_at: new Date(Date.now() - 3600000).toISOString() },
-      ])
+      const mock = getCaretakerMockData()
+      setPatient(mock.patient)
+      setStats(mock.stats)
+      setReadings(mock.readings)
+      setMessages(mock.messages)
       setPrescriptions([])
     }
   }
@@ -258,7 +274,9 @@ export default function CaretakerDashboard() {
     try {
       const { data } = await api.get('/doctor/requests/pending')
       setPendingRequests(data)
-    } catch {}
+    } catch {
+      // Ignore background connection requests errors
+    }
   }
 
   const handleRespondToRequest = async (requestId, action) => {
@@ -266,7 +284,9 @@ export default function CaretakerDashboard() {
     try {
       await api.post('/doctor/requests/respond', { requestId, action })
       await Promise.all([fetchPendingRequests(), fetchData()])
-    } catch {}
+    } catch {
+      // Ignore response errors
+    }
     setRespondingId(null)
   }
 
@@ -288,13 +308,17 @@ export default function CaretakerDashboard() {
   }
 
   useEffect(() => {
-    fetchData(readingsFilter)
-    fetchPendingRequests()
+    Promise.resolve().then(() => {
+      fetchData(readingsFilter)
+      fetchPendingRequests()
+    })
   }, [readingsFilter])
 
   useEffect(() => {
     const s = io(window.location.origin)
-    setSocket(s)
+    Promise.resolve().then(() => {
+      setSocket(s)
+    })
     if (user?.id) s.emit('register', user.id)
     s.on('newMessage', (msg) => {
       setMessages(prev => prev.some(m => m.message_id === msg.message_id) ? prev : [...prev, msg])
@@ -436,7 +460,7 @@ export default function CaretakerDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <GlucoseGauge avg={stats?.avg_level} min={stats?.min_level} max={stats?.max_level} />
                 <MedicationViewer patientName={patient?.name} prescriptions={prescriptions} />
-                <EmergencyCard patient={patient} />
+                 <CaretakerContactInfo patient={patient} />
               </div>
 
               {/* ── Heatmap ── */}

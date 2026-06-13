@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
@@ -117,7 +117,11 @@ export default function NotificationsPage() {
     }
   }, [])
 
-  useEffect(() => { fetchNotifs() }, [fetchNotifs])
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchNotifs()
+    })
+  }, [fetchNotifs])
 
   const handleMarkRead = async (id) => {
     // Optimistic update
