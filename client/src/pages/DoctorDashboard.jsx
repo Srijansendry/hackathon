@@ -539,7 +539,7 @@ export default function DoctorDashboard() {
                       <div className="flex gap-1 bg-surface-elevated rounded-lg p-1">
                         {[['week', 'Week'], ['month', 'Month'], ['year', 'Year']].map(([val, label]) => (
                           <button key={val} onClick={() => setReadingsFilter(val)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${readingsFilter === val ? 'bg-white dark:bg-slate-700 text-text-heading shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}>
+                            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${readingsFilter === val ? 'dark:bg-slate-700 text-text-heading shadow-sm bg-[color:var(--color-emerald-300)] opacity-[0.79]' : 'text-text-muted hover:text-text-secondary'}`}>
                             {label}
                           </button>
                         ))}

@@ -436,7 +436,7 @@ export default function CaretakerDashboard() {
                     <div className="flex gap-1 bg-surface-elevated rounded-lg p-0.5">
                       {[['week', 'W'], ['month', 'M'], ['year', 'Y']].map(([val, label]) => (
                         <button key={val} onClick={() => setReadingsFilter(val)}
-                          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${readingsFilter === val ? 'bg-white dark:bg-slate-700 text-text-heading shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}>
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${readingsFilter === val ? 'dark:bg-slate-700 text-text-heading shadow-sm bg-[color:var(--color-emerald-300)] opacity-[0.79]' : 'text-text-muted hover:text-text-secondary'}`}>
                           {label}
                         </button>
                       ))}
