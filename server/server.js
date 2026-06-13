@@ -50,7 +50,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 
 const clientDist = path.join(__dirname, '../client/dist')
 app.use(express.static(clientDist))
-app.get('/{*splat}', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'))
 })
 

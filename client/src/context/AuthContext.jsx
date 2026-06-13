@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { loginUser, registerUser } from '../services/authService'
 import { removeFCMToken } from '../services/notificationService'
-import { requestNotificationPermission, getFCMToken } from '../firebase'
+import { getFCMToken } from '../firebase'
 import { saveFCMToken } from '../services/notificationService'
 import api from '../services/api'
 
@@ -31,14 +31,15 @@ async function registerPushAfterLogin() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const saved = localStorage.getItem('diatrack_user')
-    if (saved) setUser(JSON.parse(saved))
-    setLoading(false)
-  }, [])
+  const [user, setUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('diatrack_user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+  const [loading] = useState(false)
 
   const login = async (email, password) => {
     const { data } = await loginUser(email, password)
@@ -69,7 +70,9 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await removeFCMToken()
-    } catch {}
+    } catch {
+      // Ignore background notification token removal errors
+    }
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem(ASKED_KEY)
     localStorage.removeItem('diatrack_token')
@@ -84,6 +87,7 @@ export function AuthProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext)
 }

@@ -8,3 +8,12 @@
 
 # Secrets & Service Accounts
 attached_assets/*.json
+.env
+.env.*
+*.local
+
+# Node & Build Outputs
+node_modules/
+dist/
+.npm/
+*.log

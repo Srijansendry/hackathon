@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 
 const MobileNavContext = createContext({ isOpen: false, toggle: () => {}, close: () => {} })
 
@@ -13,4 +13,5 @@ export function MobileNavProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useMobileNav = () => useContext(MobileNavContext)

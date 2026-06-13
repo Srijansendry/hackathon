@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -243,7 +243,7 @@ export default function Login() {
               { label: 'Secure messaging', icon: '🔒' },
               { label: 'Smart insights', icon: '✨' },
               { label: 'Care team sync', icon: '🤝' },
-            ].map((f, i) => (
+            ].map((f) => (
               <span key={f.label} className="flex items-center gap-1.5 text-[10px] font-semibold text-white/75 bg-white/8 border border-white/12 px-3 py-1.5 rounded-full backdrop-blur-sm hover:bg-white/15 hover:border-white/25 transition-all duration-200 cursor-default">
                 <span>{f.icon}</span>{f.label}
               </span>

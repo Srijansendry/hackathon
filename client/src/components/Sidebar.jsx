@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMobileNav } from '../context/MobileNavContext'
@@ -76,7 +76,7 @@ function SidebarContent({ role, onClose }) {
 
       <nav className="flex-1 p-3 space-y-0.5 relative z-10 mt-3">
         <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-600 px-3 mb-3">Navigation</p>
-        {items.map((item, i) => (
+        {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

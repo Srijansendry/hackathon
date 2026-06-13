@@ -82,7 +82,9 @@ export function usePushNotifications({ onForegroundNotification } = {}) {
     if (permission !== 'granted' || tokenStatus !== 'idle') return
     const alreadyHasToken = localStorage.getItem(STORAGE_KEY)
     if (alreadyHasToken) {
-      registerToken()
+      Promise.resolve().then(() => {
+        registerToken()
+      })
     }
   }, [permission, tokenStatus, registerToken])
 

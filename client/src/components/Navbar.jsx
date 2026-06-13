@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useMobileNav } from '../context/MobileNavContext'
@@ -70,7 +70,9 @@ export default function Navbar({ title }) {
       try {
         const { data } = await getUnreadCount()
         setUnread(data.count)
-      } catch {}
+      } catch {
+        // Ignore unread count fetch error
+      }
     }
     fetchUnread()
     const interval = setInterval(fetchUnread, 30000)
@@ -112,14 +114,14 @@ export default function Navbar({ title }) {
   const handleMarkRead = async (id) => {
     setNotifs(prev => prev.map(n => n.notification_id === id ? { ...n, is_read: true } : n))
     setUnread(prev => Math.max(0, prev - 1))
-    try { await markAsRead(id) } catch {}
+    try { await markAsRead(id) } catch { /* ignore mark read error */ }
   }
 
   const handleMarkAllRead = async () => {
     setMarkingAll(true)
     setNotifs(prev => prev.map(n => ({ ...n, is_read: true })))
     setUnread(0)
-    try { await markAllRead() } catch {}
+    try { await markAllRead() } catch { /* ignore mark all read error */ }
     finally { setMarkingAll(false) }
   }
 

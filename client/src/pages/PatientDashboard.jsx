@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,6 +16,37 @@ import { io } from 'socket.io-client'
 
 const meals = ['Breakfast', 'Lunch', 'Dinner']
 const timings = ['Before Meal', 'After Meal']
+
+// ── Mock Data Helper ──────────────────────────────────────────────────────────
+const getPatientMockData = (userId) => {
+  const now = Date.now()
+  const pId = userId || 'p-uuid-1'
+  return {
+    readings: [
+      { reading_id: 'sr-1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(now - 86400000 * 4).toISOString() },
+      { reading_id: 'sr-2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(now - 86400000 * 3).toISOString() },
+      { reading_id: 'sr-3', sugar_level: 130, meal_type: 'Dinner', timing: 'After Meal', status: 'Normal', recorded_at: new Date(now - 86400000 * 2).toISOString() },
+      { reading_id: 'sr-4', sugar_level: 72, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Low', recorded_at: new Date(now - 86400000 * 1).toISOString() },
+      { reading_id: 'sr-5', sugar_level: 118, meal_type: 'Lunch', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(now).toISOString() }
+    ],
+    stats: { avg_level: 117, min_level: 72, max_level: 155, total_readings: 5 },
+    linkedDoctor: { user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor' },
+    linkedCaretaker: { user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker' },
+    messages: [
+      { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: pId, sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(now - 3600000 * 4).toISOString() },
+      { message_id: 'm-2', sender_id: pId, receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(now - 3600000 * 3).toISOString() }
+    ],
+    caretakerMessages: [
+      { message_id: 'cm-1', sender_id: 'c-uuid-1', receiver_id: pId, sender_name: 'John Miller', sender_role: 'Caretaker', message_text: "Hi! Just checking in — how are you feeling today?", sent_at: new Date(now - 3600000 * 2).toISOString() }
+    ]
+  }
+}
+
+// ── Readings Cutoff Helper ───────────────────────────────────────────────────
+const getReadingsCutoff = (filter) => {
+  const now = Date.now()
+  return filter === 'week' ? now - 7*86400000 : filter === 'month' ? now - 30*86400000 : now - 365*86400000
+}
 
 function SmartInsights({ readings = [], stats }) {
   if (readings.length === 0 || !stats) return null
@@ -191,7 +222,9 @@ function EmergencyContactsCard({ user, onUpdate }) {
     try {
       await onUpdate({ phone: form.phone, emergencyContact: form.emergencyContact })
       setEditing(false)
-    } catch {}
+    } catch {
+      // Ignore profile update error
+    }
     setSaving(false)
   }
 
@@ -353,24 +386,13 @@ export default function PatientDashboard() {
       if (activeDoc) setMessages(results[2]?.data || [])
       if (activeCT) setCaretakerMessages(results[activeDoc ? 3 : 2]?.data || [])
     } catch {
-      const dummyReadings = [
-        { reading_id: 'sr-1', sugar_level: 110, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 4).toISOString() },
-        { reading_id: 'sr-2', sugar_level: 155, meal_type: 'Lunch', timing: 'After Meal', status: 'High', recorded_at: new Date(Date.now() - 86400000 * 3).toISOString() },
-        { reading_id: 'sr-3', sugar_level: 130, meal_type: 'Dinner', timing: 'After Meal', status: 'Normal', recorded_at: new Date(Date.now() - 86400000 * 2).toISOString() },
-        { reading_id: 'sr-4', sugar_level: 72, meal_type: 'Breakfast', timing: 'Before Meal', status: 'Low', recorded_at: new Date(Date.now() - 86400000 * 1).toISOString() },
-        { reading_id: 'sr-5', sugar_level: 118, meal_type: 'Lunch', timing: 'Before Meal', status: 'Normal', recorded_at: new Date().toISOString() }
-      ]
-      setReadings(dummyReadings)
-      setStats({ avg_level: 117, min_level: 72, max_level: 155, total_readings: 5 })
-      setLinkedDoctor({ user_id: 'd-uuid-1', name: 'Dr. Sarah Jenkins', role: 'Doctor' })
-      setLinkedCaretaker({ user_id: 'c-uuid-1', name: 'John Miller', role: 'Caretaker' })
-      setMessages([
-        { message_id: 'm-1', sender_id: 'd-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'Dr. Sarah Jenkins', sender_role: 'Doctor', message_text: 'Your morning fasting blood sugars are looking much more stable. Keep up the great work!', sent_at: new Date(Date.now() - 3600000 * 4).toISOString() },
-        { message_id: 'm-2', sender_id: user?.id || 'p-uuid-1', receiver_id: 'd-uuid-1', sender_name: 'You', sender_role: 'Patient', message_text: 'Thank you! I have been walking for 20 minutes after dinner as well.', sent_at: new Date(Date.now() - 3600000 * 3).toISOString() }
-      ])
-      setCaretakerMessages([
-        { message_id: 'cm-1', sender_id: 'c-uuid-1', receiver_id: user?.id || 'p-uuid-1', sender_name: 'John Miller', sender_role: 'Caretaker', message_text: "Hi! Just checking in — how are you feeling today?", sent_at: new Date(Date.now() - 3600000 * 2).toISOString() }
-      ])
+      const mock = getPatientMockData(user?.id)
+      setReadings(mock.readings)
+      setStats(mock.stats)
+      setLinkedDoctor(mock.linkedDoctor)
+      setLinkedCaretaker(mock.linkedCaretaker)
+      setMessages(mock.messages)
+      setCaretakerMessages(mock.caretakerMessages)
     }
   }
 
@@ -378,7 +400,9 @@ export default function PatientDashboard() {
     try {
       const { data } = await api.get('/doctor/requests/mine')
       setOutgoingRequests(data)
-    } catch {}
+    } catch {
+      // Ignore background fetch requests error
+    }
   }
 
   const handleCareSearch = async (e) => {
@@ -388,8 +412,11 @@ export default function PatientDashboard() {
     try {
       const { data } = await api.get(`/doctor/search?q=${encodeURIComponent(careSearch)}`)
       setCareResults(data)
-    } catch { setCareResults([]) }
-    finally { setCareSearchLoading(false) }
+    } catch {
+      setCareResults([])
+    } finally {
+      setCareSearchLoading(false)
+    }
   }
 
   const handleSendRequest = async (toId) => {
@@ -398,12 +425,16 @@ export default function PatientDashboard() {
       await fetchMyRequests()
       setCareResults([])
       setCareSearch('')
-    } catch {}
+    } catch {
+      // Ignore request failure
+    }
   }
 
   useEffect(() => {
     const s = io(window.location.origin)
-    setSocket(s)
+    Promise.resolve().then(() => {
+      setSocket(s)
+    })
     if (user?.id) s.emit('register', user.id)
     s.on('newMessage', (msg) => {
       const isFromDoctor = linkedDoctor && (msg.sender_id === linkedDoctor.user_id || msg.receiver_id === linkedDoctor.user_id)
@@ -434,7 +465,14 @@ export default function PatientDashboard() {
     }
   }, [pathname])
 
-  useEffect(() => { fetchData(); fetchMyRequests(); fetchPrescriptions() }, [filter])
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      fetchData()
+      fetchMyRequests()
+      fetchPrescriptions()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter])
 
   const handleAdd = async (e) => {
     e.preventDefault()
@@ -462,7 +500,9 @@ export default function PatientDashboard() {
     setReadings(prev => prev.filter(r => r.reading_id !== readingId))
     try {
       await api.delete(`/readings/${readingId}`)
-    } catch {}
+    } catch {
+      // Ignore background delete errors
+    }
   }
 
   const handleEditReading = (reading) => {
@@ -519,8 +559,8 @@ export default function PatientDashboard() {
         recordedAt: origDate.toISOString()
       })
       fetchData()
-    } catch (err) {
-      console.error('Failed to update reading:', err)
+    } catch {
+      console.error('Failed to update reading')
       fetchData()
     }
   }
@@ -530,7 +570,9 @@ export default function PatientDashboard() {
     try {
       const { data } = await api.patch(`/prescriptions/${id}/toggle`)
       setPrescriptions(prev => prev.map(p => (p.id || p.prescription_id) === id ? { ...p, status: data.status } : p))
-    } catch {}
+    } catch {
+      // Ignore prescription status toggle error
+    }
   }
 
   const handleSendCaretakerMessage = async (e) => {
@@ -564,8 +606,7 @@ export default function PatientDashboard() {
   }
 
   const filteredReadings = useMemo(() => {
-    const now = Date.now()
-    const cutoff = filter === 'week' ? now - 7*86400000 : filter === 'month' ? now - 30*86400000 : now - 365*86400000
+    const cutoff = getReadingsCutoff(filter)
     return readings.filter(r => new Date(r.recorded_at).getTime() >= cutoff)
   }, [readings, filter])
 

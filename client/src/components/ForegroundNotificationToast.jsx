@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react'
 
 export default function ForegroundNotificationToast({ notification, onClose }) {
   const [visible, setVisible] = useState(false)
+  const [prevNotification, setPrevNotification] = useState(null)
+
+  if (notification !== prevNotification) {
+    setPrevNotification(notification)
+    setVisible(!!notification)
+  }
 
   useEffect(() => {
     if (!notification) return
-    setVisible(true)
     const timer = setTimeout(() => {
       setVisible(false)
       setTimeout(onClose, 300)
